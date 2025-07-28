@@ -1,0 +1,40 @@
+function G = random_strong_digraph(n)
+if n<1
+    G = digraph;
+elseif n>1
+    
+    V = 1:n;
+    A = zeros(n,n);
+
+    % Number of circuits
+    c = randi([2,max(n-1,2)]);
+    
+    for i = 1:c
+        % Create a random sequence of vertices
+        Q = randperm(n,randi([2,n]));
+        if isempty(intersect(V(sum(A,2)>0),Q)) & i>1
+            Q(end) = randsample(V(sum(A,2)>0),1);
+        end
+        % Connecting the subsequent
+        for j = 1:length(Q)-1
+            A(Q(j),Q(j+1))=1;
+        end
+        % Connecting the end vertex to the starting vertex
+        A(Q(end),Q(1))=1;
+    end
+    
+    if(any(sum(A,2)<1))
+        % Collecting the vertices that do not have any edges
+        leftout_nodes = setdiff(V,V(sum(A,2)>0));
+        Q = randsample(V(sum(A,2)>0),1);
+        Q = [Q leftout_nodes];
+        for j = 1:length(Q)-1
+            A(Q(j),Q(j+1))=1;
+        end
+        A(Q(end),Q(1))=1;
+    end
+    G = digraph(A.');
+else
+    G = digraph(1,'omitselfloops');
+end
+end
