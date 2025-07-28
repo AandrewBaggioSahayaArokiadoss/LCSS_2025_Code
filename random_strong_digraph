@@ -1,3 +1,5 @@
+% Generates a strongly connected digraph with n vertices
+
 function G = random_strong_digraph(n)
 if n<1
     G = digraph;
