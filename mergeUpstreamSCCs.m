@@ -11,23 +11,22 @@ A_condense = adjacency(condensation(G));
 if sum(~(sum(A_condense,2)>0))>1
     disp("More than one source (initial) SCC");
 else
-    n = G.numnodes;
+    % n = G.numnodes;
     [bins,binsize] = conncomp(G);
     G = SCC_vertices_with_inedges(G);
     bin_num = length(binsize);
     for i = 1:bin_num
         % indices of the vertices in the ith bin
-        indx = abs(bins-i)<1
+        indx = abs(bins-i)<1;
         G_temp = subgraph(G,find(indx));
         A_temp = adjacency(G_temp).';
-        % Contains which vertices of the SCC (G_temp) had incoming edges
+        % Adjacency vector for vertices of the SCC (G_temp) with incoming edges
         % from other SCCs
         in_edge_temp = G_temp.Nodes.is_inedge;
-        disp(X(indx))
-        if any(X(indx))
-            A=blkdiag(A,[zeros(1,binsize+1);in_edge_temp A_temp]);
+        if any(in_edge_temp)
+            A=blkdiag(A,[zeros(1,binsize(i)+1);in_edge_temp A_temp].');
         else
-            A=blkdiag(A,A_temp);
+            A=blkdiag(A,A_temp.');
         end
     end
 end
