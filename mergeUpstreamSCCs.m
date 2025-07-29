@@ -3,7 +3,8 @@
 % 1) If the SCC has no incoming arcs from other SCCs, it is directly input to the algorithm.
 % 2) Otherwise, a subgraph containing the SCC and its upstream SCCs is formed. These upstream SCCs are 
 %    merged into a single vertex (combining parallel arcs),
-%    and the simplified subgraph is input to the algorithm
+%    The adjacency matrices of such simplified subgraphs are combined in
+%    block diagonal format and returned
 
 function A = mergeUpstreamSCCs(G)
 A = [];
