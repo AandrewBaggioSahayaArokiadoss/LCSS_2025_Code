@@ -14,6 +14,4 @@ function [X,t] = SimulateCoupledSystems(systemDynamics,tSpan,X0,G,P)
 
     % Solve the coupled system using ode45
     [t, X] = ode45(@(t,X) coupledDynamics(t,X,systemDynamics,L,P), tSpan, X0);
-
-   
 end
