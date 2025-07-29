@@ -1,3 +1,6 @@
+% This function returns dX/dt for the entire network by evaluating the
+% state of each system
+
 function dXdt = coupledDynamics(t,X,systemDynamics,L,P)
 
 N = length(L);
