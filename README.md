@@ -4,4 +4,4 @@ The matlab codes used for checking the computations of my first submission to LC
 3) mergeUpstreamSCCs - For each SCC in the given digraph, it merges all its upstream SCCs into a single digraph and returns all the adjacency matrices of these digraphs in block diagonal format
 4) coupledDynamics - Given the state vector for the entire dynamical network, gives dX/dt for the entire network
 5) SimulateCoupledSystems -  Gives a list of state vectors for the entire time span
-6) NegativeImbalanceVector - Assigns a negatice imbalance vector to a strongly connected digraph and plots it with the edge weights and imbalances
+6) NegativeImbalanceVectorSCC - Assigns a negatice imbalance vector to a strongly connected digraph and plots it with the edge weights and imbalances
