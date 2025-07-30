@@ -7,27 +7,34 @@
 %    block diagonal format and returned
 
 function A = mergeUpstreamSCCs(G)
-A = [];
 A_condense = adjacency(condensation(G));
 if sum(~(sum(A_condense,2)>0))>1
-    disp("More than one source (initial) SCC");
+    % A = [];
+    error("More than one source (initial) SCC");
 else
     % n = G.numnodes;
     [bins,binsize] = conncomp(G);
+    A = zeros(max(binsize),max(bins)*max(binsize));
     G = SCC_vertices_with_inedges(G);
     bin_num = length(binsize);
     for i = 1:bin_num
         % indices of the vertices in the ith bin
-        indx = abs(bins-i)<1;
-        G_temp = subgraph(G,find(indx));
+        idx = abs(bins-i)<1;
+        G_temp = subgraph(G,find(idx));
         A_temp = adjacency(G_temp).';
         % Adjacency vector for vertices of the SCC (G_temp) with incoming edges
         % from other SCCs
         in_edge_temp = G_temp.Nodes.is_inedge;
-        if any(in_edge_temp)
-            A=blkdiag(A,[zeros(1,binsize(i)+1);in_edge_temp A_temp].');
+        if i<2
+            indx = 1;
         else
-            A=blkdiag(A,A_temp.');
+            indx = find(sum(A)>0,1,'last')+1;
+        end
+        disp([indx:indx+binsize(i) indx:indx+binsize(i)])
+        if any(in_edge_temp)
+            A(indx:indx+binsize(i),indx:indx+binsize(i))=[zeros(1,binsize(i)+1);in_edge_temp A_temp].';
+        else
+            A(indx:indx-1+binsize(i),indx:indx-1+binsize(i))=A_temp.';
         end
     end
 end
