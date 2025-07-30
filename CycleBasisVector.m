@@ -1,0 +1,35 @@
+function G = CycleBasisVector(G)
+% CycleBasisVector  Increment 'null_weight' along random cycles until every edge has positive weight
+%   G = CycleBasisVector(G)
+%   Input: digraph G
+%   Returns: updated digraph G with edge weight G.Edges.null_weight > 0
+
+% Step 1: initialize null_weight to zero on all edges
+G.Edges.null_weight = zeros(numedges(G),1);
+
+% Keep track until all null_weight > 0
+while any(G.Edges.null_weight == 0)
+    % Step 2: pick a random edge index among those still zero
+    zeroIdx = find(G.Edges.null_weight == 0);
+    eidx = zeroIdx(randi(numel(zeroIdx)));
+    
+    % Step 3: get source and target nodes of that edge
+    uv = G.Edges.EndNodes(eidx,:);
+    t = uv(1);  % tail/source
+    h = uv(2);  % head/target
+    
+    % Step 4: find a directed path in edges from h to t
+    % use shortestpath to get edge indices directly
+    [~,~,edgePath] = shortestpath(G, h, t);
+    
+    % Build cycle-edge list C
+    if isempty(edgePath)
+        % no path, skip this edge this iteration
+        continue;
+    end
+    C = [eidx, edgePath(:)'];
+    
+    % Step 5: increment null_weight on all edges in C
+    G.Edges.null_weight(C) = G.Edges.null_weight(C) + 1;
+end
+end
