@@ -1,8 +1,9 @@
-function G = CycleBasisVector(G)
 % CycleBasisVector  Increment 'null_weight' along random cycles until every edge has positive weight
 %   G = CycleBasisVector(G)
 %   Input: digraph G
 %   Returns: updated digraph G with edge weight G.Edges.null_weight > 0
+
+function G = CycleBasisVector(G)
 
 % Step 1: initialize null_weight to zero on all edges
 G.Edges.null_weight = zeros(numedges(G),1);
