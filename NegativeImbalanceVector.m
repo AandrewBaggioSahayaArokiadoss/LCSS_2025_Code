@@ -2,10 +2,10 @@
 % can make all but one vertex imbalance to have a negative values
 
 function G = NegativeImbalanceVector(G, a)
-
+    n = numnodes(G);                   % total number of nodes
     m = numedges(G);                   % total number of edges
     G.Edges.edge_id = (1:m)';          % assign unique ID 1..m
-    
+
     % find strongly connected components
     comp = conncomp(G, 'Type', 'strong');
     numComp = max(comp);
@@ -15,9 +15,9 @@ function G = NegativeImbalanceVector(G, a)
         % Case 1: strongly connected
         src = randi(numnodes(G));      % random node index
         G = NegativeImbalanceVectorSCC(G, src, a);
-        
     elseif numComp == 2 && any(compSizes == 1)
         % Case 2: exactly two SCCs, one of size 1
+
         % identify isolated singleton component
         singletonComp = find(compSizes == 1);
         v_r = find(comp == singletonComp);  % node index of that singleton
@@ -42,13 +42,12 @@ function G = NegativeImbalanceVector(G, a)
         srcInG1 = find(nodesToKeep == src);
         G1 = NegativeImbalanceVectorSCC(G1, srcInG1, a);
         
-        % initialize weights in G
-        G.Edges.Weight = zeros(m,1);
         % copy weights by matching edge_id
         % First, ensure G1 has edge_id and Weight
         % match edge‑ids:
         [tf, loc] = ismember(G1.Edges.edge_id, G.Edges.edge_id);
-        G.Edges.Weight(loc(tf)) = G1.Edges.Weight(tf);
+        G.Edges.weight = zeros(m,1);       % initialize weights in G
+        G.Edges.weight(loc(tf)) = G1.Edges.weight(tf);
         
         % now handle edges out of v_r
         outEdges = outedges(G, v_r);
@@ -58,15 +57,31 @@ function G = NegativeImbalanceVector(G, a)
             tgt = e.EndNodes(2);
             if tgt == src
                 imb = indegree(G1, srcInG1) - outdegree(G1, srcInG1);
-                G.Edges.Weight(eIdx) = a + 0.5 * imb;
+                G.Edges.weight(eIdx) = a + 0.5 * imb;
             else
-                G.Edges.Weight(eIdx) = a;
+                G.Edges.weight(eIdx) = a;
             end
         end
         
     else
         % Case 3: failure structure
-        disp('The digraph is not in a proper structure');
-        G = digraph();  % return empty digraph
+        error('The digraph is not in a proper structure');
+        % G = digraph();  % return empty digraph
     end
+
+    % Updating the vertex imbalances
+    w = G.Edges.weight;
+    imbalance = zeros(n,1);
+
+    % For each node: sum outgoing weights and subtract incoming weights
+    for v = 1:n
+        outE = outedges(G, v);    % edge indices of outgoing
+        inE  = inedges(G, v);     % edge indices of incoming
+        sumOut = sum(w(outE));
+        sumIn  = sum(w(inE));
+        imbalance(v) = sumOut - sumIn;
+    end
+
+    % Attach to node table
+    G.Nodes.imbalance = imbalance;
 end
