@@ -52,7 +52,9 @@ for v = 1:n
 end
 
 % Plot the graph
-plot(G, 'EdgeLabel', G.Edges.weight, 'NodeLabel', strcat(string(G.Nodes.names),"(",string(G.Nodes.imbalance),")"));
+plot(G, 'EdgeLabel', G.Edges.weight, 'NodeLabel', string(G.Nodes.imbalance));
+% plot(G, 'EdgeLabel', G.Edges.weight, 'NodeLabel', strcat(string(G.Nodes.names),"(",string(G.Nodes.imbalance),")"));
+
 title(sprintf('Digraph with weight-scaled by %g and node imbalance', a));
 
 end
