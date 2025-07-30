@@ -1,6 +1,5 @@
-function G = NegativeImbalanceVector(G, src, a)
-% assignWeightsAndImbalance  — Add edge/node variables and compute weights & imbalance
-%   G = assignWeightsAndImbalance(G, src, a)
+% NegativeImbalanceVectorSCC  — Add edge/node variables and compute weights & imbalance
+%   G = NegativeImbalanceVectorSCC(G, src, a)
 %   Inputs:
 %     G   – strongly‑connected digraph
 %     src – source vertex index or name
@@ -10,6 +9,8 @@ function G = NegativeImbalanceVector(G, src, a)
 %           G.Edges.weight   – numeric weight per edge
 %           G.Nodes.imbalance – numeric imbalance per node
 %   And a plot of the graph with edge‑labels showing weight and node‑labels showing imbalance.
+
+function G = NegativeImbalanceVectorSCC(G, src, a)
 
 % Add custom edge and node attributes, initialized to zero
 G.Edges.weight = zeros(numedges(G),1);
