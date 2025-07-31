@@ -1,7 +1,7 @@
 % NegativeImbalanceVector - computes a vector with positive entries that
 % can make all but one vertex imbalance to have a negative values
 
-function G = NegativeImbalanceVector(G, a)
+function G = NegativeImbalanceVector(G,a)
     n = numnodes(G);                   % total number of nodes
     m = numedges(G);                   % total number of edges
     G.Edges.edge_id = (1:m)';          % assign unique ID 1..m
@@ -31,15 +31,15 @@ function G = NegativeImbalanceVector(G, a)
         
         % find an edge from v_r: find successors
         succ = successors(G, v_r);
-        if isempty(succ)
-            error('Expected v_r to have outgoing edges.');
-        end
 
         src = succ(randi(numel(succ)));
         
         % map src into index in G1
         % In subgraph, node indices are preserved order so find index:
         srcInG1 = find(nodesToKeep == src);
+
+        fprintf("v_r = %d",srcInG1)
+
         G1 = NegativeImbalanceVectorSCC(G1, srcInG1, 2*a);
         
         % copy weights by matching edge_id
@@ -48,9 +48,8 @@ function G = NegativeImbalanceVector(G, a)
         [tf, loc] = ismember(G1.Edges.edge_id, G.Edges.edge_id);
         G.Edges.weight = zeros(m,1);       % initialize weights in G
         G.Edges.weight(loc(tf)) = G1.Edges.weight(tf);
-        disp(G.Edges.weight)
-        disp(G1.Edges.weight)
-        
+        disp(G1.Edges.weight.')
+        disp(G.Edges.weight.')
         % now handle edges out of v_r
         outEdges = outedges(G, v_r);
         for k = 1:numel(outEdges)
@@ -58,8 +57,8 @@ function G = NegativeImbalanceVector(G, a)
             e = G.Edges(eIdx, :);
             tgt = e.EndNodes(2);
             if tgt == src
-                imb = indegree(G1, srcInG1) - outdegree(G1, srcInG1);
-                G.Edges.weight(eIdx) = a + 0.5 * imb;
+                % imb = outdegree(G1, srcInG1)-indegree(G1, srcInG1);
+                G.Edges.weight(eIdx) = a + 0.5 *G1.Nodes.imbalance(srcInG1);
             else
                 G.Edges.weight(eIdx) = a;
             end
