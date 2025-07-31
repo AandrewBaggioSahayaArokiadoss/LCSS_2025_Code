@@ -29,9 +29,8 @@ for t = 1:n
         continue;
     else
         % Compute one path — for example shortest path
-        [~,L,edgePath] = shortestpath(G, src, t);
-        disp(edgePath)
-        % L = numel(edgePath);
+        [~,~,edgePath] = shortestpath(G, src, t);
+        L = numel(edgePath);
         % for each edge on the path, starting from source
         for i = 1:L
             % weight contribution = (path_len − i + 1)
@@ -52,9 +51,9 @@ for v = 1:n
 end
 
 % Plot the graph
-plot(G, 'EdgeLabel', G.Edges.weight, 'NodeLabel', string(G.Nodes.imbalance));
-% plot(G, 'EdgeLabel', G.Edges.weight, 'NodeLabel', strcat(string(G.Nodes.names),"(",string(G.Nodes.imbalance),")"));
-
+% plot(G, 'EdgeLabel', G.Edges.weight, 'NodeLabel', string(G.Nodes.imbalance));
+plot(G, 'EdgeLabel', strcat(string(1:G.numedges),"(",string(G.Edges.weight.'),")"));
+% , 'NodeLabel', strcat(string(G.Nodes.names),"(",string(G.Nodes.imbalance),")")
 title(sprintf('Digraph with weight-scaled by %g and node imbalance', a));
 
 end
