@@ -539,7 +539,7 @@ $6\rightarrow7\rightarrow8\rightarrow6$ & $\left[\;0\;0\;1\;1\;0\;1\;0\;0\;\righ
 \caption{Sum of cycle basis for $\G_{1}$}
 \end{table}
 A cycle basis for $\G_{1}$ is listed in the table \ref{tab:Cycle basis sum for G1}, and from this, we determine its summation i.e. X$^{0}$. We computed $\Delta \varepsilon$ to be equal to $\dfrac{20a}{6}$ and scale X$^{0}$ to get  $\E^{0}= \dfrac{20a}{6}[1\:1\:2\:1\:1\:2\:2\:2]^\top$. The second component, $\G_{2}$, consists of all vertices labeled from 1 to 4, along with their respective arcs. We construct a digraph $\tilde{\G}_{2}$ by condensing $\G_{1}$ into a single vertex (vertex $0$) while preserving the arcs from $\G_{1}$ to $\G_{2}$, as illustrated in \cref{fig:Example Condensation}. 
-For $\tilde{\G}_{2}$, we find the negative imbalance arc weight vector for its SCC ($G_{2}$) by finding directed paths from vertex "1" and scale the sum by $2a$. This results in the following vertex imbalances : D$_{1}=12a$, D$_{2}=-6a$, D$_{3}=-4a$ and D$_{4}=-2a$. Fixing vertex $0$, X$^{-}$ is computed to be $[\;6\;3\;0\;1\;0]^{\top}$.
+For $\tilde{\G}_{2}$, we find the negative imbalance arc weight vector for its SCC ($G_{2}$) by finding directed paths from vertex "1" and scale the sum by $2a$. This results in the following vertex imbalances : D$_{1}=12a$, D$_{2}=-6a$, D$_{3}=-4a$ and D$_{4}=-2a$ for $\E^{-}=2a[\;6\;3\;0\;1\;0]^{\top}$.
 
 \begin{table}[h]
 \centering
@@ -556,18 +556,18 @@ $1\rightarrow2\rightarrow3\rightarrow4$&$[\;3\;2\;0\;1\;0\;]^{\top}$\\\hline
 \caption{Directed paths in $\G_{2}$ and their respective vectors\\for negative imbalance arc weight vector computation}
 \end{table}
 
-\begin{table}[h]
-\begin{tabular}{|c|c|}
-\hline
-\textbf{Directed Cycle} & \textbf{Signed Incidence Vector}\\\hline
-$1\rightarrow2\rightarrow3\rightarrow4\rightarrow1$ & $\left[\;0\;0\;0\;0\;1\;1\;1\;1\;0\;\right]^{\top}$\\\hline
-$1\rightarrow2\rightarrow3\rightarrow1$ & $\left[\;0\;0\;0\;0\;1\;1\;0\;0\;1\;\right]^{\top}$\\\hline
-\end{tabular}
-\label{tab:G2 vectors}
+%\begin{table}[h]
+%\begin{tabular}{|c|c|}
+%\hline
+%\textbf{Directed Cycle} & \textbf{Signed Incidence Vector}\\\hline
+%$1\rightarrow2\rightarrow3\rightarrow4\rightarrow1$ & $\left[\;0\;0\;0\;0\;1\;1\;1\;1\;0\;\right]^{\top}$\\\hline
+%$1\rightarrow2\rightarrow3\rightarrow1$ & $\left[\;0\;0\;0\;0\;1\;1\;0\;0\;1\;\right]^{\top}$\\\hline
+%\end{tabular}
+%\label{tab:G2 vectors}
 %\caption{}
 %\label{tab:Circuit Basis of G2} 
-\caption{Weighted Incidence Vectors of directed paths from $v_{0}$ in $\tilde{\G}_{2}$ and cycle basis of $\tilde{\G}_{2}$}
-\end{table}
+%\caption{Weighted Incidence Vectors of directed paths from $v_{0}$ in $\tilde{\G}_{2}$ and cycle basis of $\tilde{\G}_{2}$}
+%\end{table}
 
 
 \section{Simulation and Results}
