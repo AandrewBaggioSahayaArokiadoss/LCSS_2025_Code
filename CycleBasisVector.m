@@ -29,7 +29,6 @@ while any(G.Edges.null_weight == 0)
         continue;
     end
     C = [eidx, edgePath(:)'];
-    
     % Step 5: increment null_weight on all edges in C
     G.Edges.null_weight(C) = G.Edges.null_weight(C) + 1;
 end
