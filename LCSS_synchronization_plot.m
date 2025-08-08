@@ -1,4 +1,8 @@
+%% 
 % Graph plot with edge weight labels
+clc;
+clear;
+close all
 
 syms a;
 
@@ -11,7 +15,7 @@ a_num = -sigma+(beta*(beta+1)*(rho+sigma)^2)/(16*(beta-1)); %Lorentz Osillator p
 
 
 w11 = [12*a+2 6*a+2 1 2*a+1 1].';
-w21 = [7*a a a/2 a/2 a].';
+w21 = [7*a a/2 a/2].';
 
 w1 = [w11;w21];
 
@@ -23,23 +27,23 @@ Edge_label = string(w);
 
 w = double(subs(w,a,a_num));
 
-tail = [1 2 3 3 4 5 8 8 7 9 8 6 7 9 10 5 5 7];
-head = [2 3 1 4 1 1 2 3 3 4 6 7 8 10 5 9 8 9];
+tail = [1 2 3 3 4 8 8 7 8 6 7 9 10 5 5 7];
+head = [2 3 1 4 1 1 3 3 6 7 8 10 5 9 8 9];
 
 G = digraph(tail,head,w);
 
 N = G.numnodes; % Number of vertices
 numStates = 3; % Number of states
 
-data_length = 20;
-t_end = 3;
+data_length = 30;
+t_end = 5;
 tSpan = linspace(0,t_end,data_length); % Time span
 
 edge_weights = G.Edges.Weight;
 
 EdgeLabel = round(edge_weights,2);
 
-plot(G,'EdgeLabel',EdgeLabel)
+% plot(G,'EdgeLabel',EdgeLabel)
 
 mu = 5;
 sigma = 10;
@@ -52,6 +56,8 @@ P = diag([1,0,0]);
 
 X0 = mu + sigma*rand(1,numStates*N);
 [X,t] = SimulateCoupledSystems(@LorenzOscillator,tSpan,X0,G,P);
+size(t)
+size(X)
 
 state_index = 1:numStates;
 state_index_rem = 1:numStates*N;
@@ -62,8 +68,9 @@ lw = [2*ones(1,4) 1.5*ones(1,4) 1 1];
 mark = {'none','none','none','none','*','*','o','o','.','.'};
 
 E = zeros(N,length(t));
-
-figure
+cols = ['A' 'B' 'C' 'D' 'E' 'F' 'G' 'H' 'I' 'J' 'K'];
+range_end = length(t)+1;
+figure(2)
 grid on
 hold on
 for i = 1:N
@@ -71,10 +78,20 @@ for i = 1:N
     slice_rem = setdiff(state_index_rem,slice_i);
     e = vecnorm(repmat(X(:,slice_i),1,N-1)-X(:,slice_rem),2,2).';
     E(i,:) = e;
-    plot(0:length(t)-1,e,'Color',colors(i,:),'LineWidth',lw(i),'LineStyle',linestyle{i}(:),'Marker',mark{i}(:),'MarkerFaceColor','none','DisplayName', sprintf('System %d',i))
+    plot(t.',e,'Color',colors(i,:),'LineWidth',lw(i),'LineStyle',linestyle{i}(:),'Marker',mark{i}(:),'MarkerFaceColor','none','DisplayName', sprintf('System %d',i))
+    range_str = strcat(cols(i+1),'2:',cols(i+1),string(range_end));
+    disp(range_str)
+    writematrix(e.','Synchronization.xlsx','Sheet',1,'Range',range_str);
+    writematrix(strcat('e',string(i)),'Synchronization.xlsx','Sheet',1,'Range',strcat(cols(i+1),string(1)));
 end
-xlabel('Time Steps')
+
+range_str = strcat(cols(1),'2:',cols(1),string(range_end));
+writematrix(t,'Synchronization.xlsx','Sheet',1,'Range',range_str);
+writematrix('t','Synchronization.xlsx','Sheet',1,'Range','A1');
+
+xlabel('Time ')
 ylabel('Sum of square of pairwise distances')
 title('Synchronization of 10 Lorentz Oscillators');
 legend show
+grid on
 hold off
