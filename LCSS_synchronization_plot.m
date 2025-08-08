@@ -35,8 +35,8 @@ G = digraph(tail,head,w);
 N = G.numnodes; % Number of vertices
 numStates = 3; % Number of states
 
-data_length = 30;
-t_end = 5;
+data_length = 20;
+t_end = 3;
 tSpan = linspace(0,t_end,data_length); % Time span
 
 edge_weights = G.Edges.Weight;
