@@ -6,3 +6,4 @@ The matlab codes used for checking the computations of my first submission to LC
 5) SimulateCoupledSystems -  Gives a list of state vectors for the entire time span
 6) NegativeImbalanceVectorSCC - Assigns a negative imbalance vector to a strongly connected digraph and plots it with the edge weights and imbalances
 7) NegativeImbalanceVector - Uses NegativeImbalanceVectorSCC to assign vertex imbalance vector for digraphs that are either strongly connected or that have two SCCs with one of them being a vertex devoid of incoming edges
+8) LCSS_synchronization_plot - Creates the plot for the synchronization of a dynamical network of Lorentz oscillators, plots the image and stores the image data in an excel sheet of the name "sync_data.xlsx"
