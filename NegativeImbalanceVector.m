@@ -1,56 +1,85 @@
-% NegativeImbalanceVectorSCC  — Add edge/node variables and compute weights & imbalance
-%   G = NegativeImbalanceVectorSCC(G, src, a)
-%   Inputs:
-%     G   – strongly‑connected digraph
-%     src – source vertex index or name
-%     a   – scaling constant
-%   Outputs:
-%     G   – updated digraph, with:
-%           G.Edges.weight   – numeric weight per edge
-%           G.Nodes.imbalance – numeric imbalance per node
-%   And a plot of the graph with edge‑labels showing weight and node‑labels showing imbalance.
+% NegativeImbalanceVector - computes a vector with positive entries that
+% can make all but one vertex imbalance to have a negative values
 
-function G = NegativeImbalanceVectorSCC(G, src, a)
+function G = NegativeImbalanceVector(G,a)
+    n = numnodes(G);                   % total number of nodes
+    m = numedges(G);                   % total number of edges
+    G.Edges.edge_id = (1:m)';          % assign unique ID 1..m
 
-% Add custom edge and node attributes, initialized to zero
-G.Edges.weight = zeros(numedges(G),1);
-G.Nodes.imbalance = zeros(numnodes(G),1);
-G.Edges.id = (1:G.numedges).';
-disp(G.Edges)
-% For each target node (except src), find one directed path
-n = numnodes(G);
-
-G.Nodes.names = (1:n).';
-
-for t = 1:n
-    % if isequal(t,src) || isequal(findnode(G,src), findnode(G,t)), continue; end
+    % find strongly connected components
+    comp = conncomp(G, 'Type', 'strong');
+    numComp = max(comp);
+    compSizes = histcounts(comp, 1:numComp+1);
     
-    if t==src
-        continue;
-    else
-        % Compute one path — for example shortest path
-        [~,~,edgePath] = shortestpath(G, src, t);
-        L = numel(edgePath);
-        % for each edge on the path, starting from source
-        for i = 1:L
-            % weight contribution = (path_len − i + 1)
-            w = (L-i+1);
-            G.Edges.weight(edgePath(i)) = G.Edges.weight(edgePath(i)) + w;
+    if numComp == 1
+        % Case 1: strongly connected
+        src = randi(numnodes(G));      % random node index
+        G = NegativeImbalanceVectorSCC(G, src, a);
+    elseif numComp == 2 && any(compSizes == 1)
+        % Case 2: exactly two SCCs, one of size 1
+        % identify isolated singleton component
+        singletonComp = find(compSizes == 1);
+        v_r = find(comp == singletonComp);  % node index of that singleton
+        % verify no incoming edges
+        if indegree(G, v_r) > 0
+            error('Expected the singleton to have no incoming edges.');
         end
+        
+        % subgraph G1 by removing v_r
+        nodesToKeep = setdiff(1:numnodes(G), v_r);
+        G1 = subgraph(G, nodesToKeep);
+        
+        % find an edge from v_r: find successors
+        succ = successors(G, v_r);
+
+        src = succ(randi(numel(succ)));
+        
+        % map src into index in G1
+        % In subgraph, node indices are preserved order so find index:
+        srcInG1 = find(nodesToKeep == src);
+
+        fprintf("v_r = %d\n",srcInG1)
+
+        G1 = NegativeImbalanceVectorSCC(G1, srcInG1, 2*a);
+        
+        % copy weights by matching edge_id
+        % First, ensure G1 has edge_id and Weight
+        % match edge‑ids:
+        [tf, loc] = ismember(G1.Edges.edge_id, G.Edges.edge_id);
+        G.Edges.weight = zeros(m,1);       % initialize weights in G
+        G.Edges.weight(loc(tf)) = G1.Edges.weight(tf);
+
+        % now handle edges out of v_r
+        outEdges = outedges(G, v_r);
+        for k = 1:numel(outEdges)
+            eIdx = outEdges(k);
+            e = G.Edges(eIdx, :);
+            tgt = e.EndNodes(2);
+            if tgt == src
+                G.Edges.weight(eIdx) = a + 0.5 *G1.Nodes.imbalance(srcInG1);
+            else
+                G.Edges.weight(eIdx) = a;
+            end
+        end
+        
+    else
+        % Case 3: failure structure
+        error('The digraph is not in a proper structure');
     end
-end
 
-% Scale edge weights by a
-G.Edges.weight = a * G.Edges.weight;
+    % Updating the vertex imbalances
+    w = G.Edges.weight;
+    imbalance = zeros(n,1);
 
-% Compute imbalance for each node: outgoing minus incoming weight sums
-for v = 1:n
-    outgoing = sum(G.Edges.weight(G.outedges(v)));
-    incoming = sum(G.Edges.weight(G.inedges(v)));
-    G.Nodes.imbalance(v) = outgoing - incoming;
-end
+    % For each node: sum outgoing weights and subtract incoming weights
+    for v = 1:n
+        outE = outedges(G, v);   % edge indices of outgoing
+        inE  = inedges(G, v);     % edge indices of incoming
+        sumOut = sum(w(outE));
+        sumIn  = sum(w(inE));
+        imbalance(v) = sumOut - sumIn;
+    end
 
-% Plot the graph
-plot(G, 'EdgeLabel', G.Edges.weight, 'NodeLabel', string(G.Nodes.imbalance));
-title(sprintf('Digraph with weight-scaled by %g and node imbalance', a));
+    % Attach to node table
+    G.Nodes.imbalance = imbalance;
 end
