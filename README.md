@@ -6,4 +6,5 @@ The matlab codes used for checking the computations of my first submission to LC
 5) NegativeImbalanceVectorSCC - Assigns a negative imbalance vector to a strongly connected digraph and plots it with the edge weights and imbalances
 6) NegativeImbalanceVector - Uses NegativeImbalanceVectorSCC to assign vertex imbalance vector for digraphs that are either strongly connected or that have two SCCs with one of them being a vertex devoid of incoming edges
 7) LCSS_synchronization_plot - Creates the plot for the synchronization of a dynamical network of Lorentz oscillators, plots the image and stores the image data in an excel sheet of the name "sync_data.xlsx"
-8) synchronization_plot - Uses sync_data to create the plot
+8) CycleBasisVector - finds the sum of cycle basis with positive entries of the input strongly connected digraph
+9) synchronization_plot - Uses sync_data to create the plot
