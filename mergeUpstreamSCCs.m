@@ -9,10 +9,8 @@
 function A = mergeUpstreamSCCs(G)
 A_condense = adjacency(condensation(G));
 if sum(~(sum(A_condense,2)>0))>1
-    % A = [];
     error("More than one source (initial) SCC");
 else
-    % n = G.numnodes;
     [bins,binsize] = conncomp(G);
     A = zeros(max(binsize),max(bins)*max(binsize));
     G = SCC_vertices_with_inedges(G);
