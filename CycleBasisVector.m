@@ -6,9 +6,11 @@
 function G = CycleBasisVector(G)
 
 % Step 1: initialize null_weight to zero on all edges
-G.Edges.null_weight = zeros(numedges(G),1);
-
+G.Edges.null_weight = zeros(G.numedges,1);
+G.Edges.id = (1:G.numedges).';
 % Keep track until all null_weight > 0
+disp(G.Edges)
+
 while any(G.Edges.null_weight == 0)
     % Step 2: pick a random edge index among those still zero
     zeroIdx = find(G.Edges.null_weight == 0);
@@ -22,7 +24,7 @@ while any(G.Edges.null_weight == 0)
     % Step 4: find a directed path in edges from h to t
     % use shortestpath to get edge indices directly
     [~,~,edgePath] = shortestpath(G, h, t);
-    
+    disp(G.Edges.id(edgePath).')
     % Build cycle-edge list C
     if isempty(edgePath)
         % no path, skip this edge this iteration
