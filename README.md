@@ -8,3 +8,4 @@ The matlab codes used for checking the computations of my first submission to LC
 7) LCSS_synchronization_plot - Creates the plot for the synchronization of a dynamical network of Lorentz oscillators, plots the image and stores the image data in an excel sheet of the name "sync_data.xlsx"
 8) CycleBasisVector - finds the sum of cycle basis with positive entries of the input strongly connected digraph
 9) synchronization_plot - Uses sync_data to create the plot
+10) SyncCouplingAssign - the main function that allocates coupling strengths that can synchronize using all the above functions
