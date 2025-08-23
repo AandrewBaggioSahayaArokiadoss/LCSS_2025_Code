@@ -101,8 +101,7 @@ function G = SyncCouplingAssign(G,a)
         inSum  = sum(G.Edges.edge_weight(G.Edges.EndNodes(:,2) == src & ...
                     G.Edges.SCC_start == s & G.Edges.SCC_end == s));
         diff = outSum - inSum;
-        imbalanceIncrement = diff / 2;
-        G.Nodes.imbalance(src) = a + imbalanceIncrement;
+        G.Nodes.imbalance(src) = a + (diff / 2);
 
         % Find the nodes among the nodes of the current SCC with
         % incoming edges from other SCCs
