@@ -10,6 +10,7 @@
 %     G   – updated digraph, with the edge variable edge_weight updated
 
 function G = SyncCouplingAssign(G,a)
+
     % Number of edges
     m = G.numedges;
     % Number of nodes
@@ -47,18 +48,18 @@ function G = SyncCouplingAssign(G,a)
 
     G.Nodes.has_in_edge = has_in_edge;
 
-    % Process each SCC
-    uniqueSCCs = unique(bins);
-    for s = uniqueSCCs
-        % Extract subgraph G1 of this SCC
-        nodesInSCC = find(bins == s);
-        % edgeMask = ismember(G.Edges.SCC_start, s) & ismember(G.Edges.SCC_end, s);
-        G_SCC = subgraph(G,nodesInSCC);
-        % Adjust edge_id correspondence in G1
-        % G1.Edges.edge_id = G.Edges.edge_id(edgeMask);
+    % Set the imbalances of nodes with edges from other SCCs to '-a'
+    G.Nodes.imbalance(find(has_in_edge==1)) = -a;
 
-        % (i) Set imbalance of has_in_edge nodes in SCC to a
-        G.Nodes.imbalance(intersect(nodesInSCC,find(has_in_edge==1)),1) = a;
+    % Number of SCCs
+    uniqueSCCs = unique(bins);
+
+    % Process each SCC
+    for s = uniqueSCCs
+
+        % Extract the subgraph of the current SCC
+        nodesInSCC = find(bins == s);
+        G_SCC = subgraph(G,nodesInSCC);
 
         src = randsample(intersect(nodesInSCC,find(has_in_edge==1)),1);
 
@@ -101,7 +102,7 @@ function G = SyncCouplingAssign(G,a)
             incomingE = find(G.Edges.EndNodes(:,2) == u & ...
                              G.Edges.SCC_start ~= G.Edges.SCC_end);
             if ~isempty(incomingE)
-                share = imb / numel(incomingE);
+                share = abs(imb / numel(incomingE));
                 for e = incomingE.'
                     G.Edges.edge_weight(e) = G.Edges.edge_weight(e) + share;
                 end
