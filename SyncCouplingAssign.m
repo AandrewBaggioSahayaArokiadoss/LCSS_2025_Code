@@ -71,11 +71,13 @@ function G = SyncCouplingAssign(G,a)
             G.Edges.edge_weight(eid) = G.Edges.edge_weight(eid) + G_temp.Edges.edge_weight(ei);
         end
 
+        % Find the sum of all path lengths from src in G_SCC 
+        % by finding the largest value of vector imbalance
+        P_sum = max(-incidence(G_temp)*G_temp.edge_weight);
 
-        % Find the length of the largest path by finding the 
-        % largest value of vector imbalance
-
-        P = max(-incidence(G_temp)*G_temp.edge_weight);
+        % Scaling the negative vertex imbalance vector edge weights
+        % by 2a
+        G_temp.edge_weight = 2*a*G_temp.edge_weight;
 
         % Call CycleBasisVector and update edge weights in G
         G_temp = CycleBasisVector(G_SCC);
@@ -83,7 +85,7 @@ function G = SyncCouplingAssign(G,a)
         % Scaling the cycle basis vector edge weights to meet
         % the synchronization condition
 
-        G_temp.edge_weight = (2*a/nodesInSCC)*(1+P)*P*G_temp.edge_weight;
+        G_temp.edge_weight = (2*a/nodesInSCC)*(1+P_sum)*P_sum*G_temp.edge_weight;
 
         % Adding this to the edge weights of G by comparing edge ids
         for ei = 1:numedges(G_temp)
