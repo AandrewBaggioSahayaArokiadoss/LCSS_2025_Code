@@ -1,9 +1,13 @@
-% SyncCouplingAssign — Process directed graph G with parameter a
-% G : digraph
-% a : scalar parameter
-% For each edge, initialize edge_weight, SCC_start, SCC_end, edge_id.
-% Identify SCCs, mark nodes with incoming inter-SCC edges.
-% For each SCC, adjust imbalance according to provided rules.
+% SyncCouplingAssign takes in a digraph and a scalar and returns
+% the same digraph with its edge weights updated such that the vertex
+% imbalances of all the vertices are negative and the synchroniztion
+% conditions are satisfied
+
+%   Inputs:
+%     G – strongly‑connected digraph
+%     a – scalar parameter a
+%   Outputs:
+%     G   – updated digraph, with the edge variable edge_weight updated
 
 function G = SyncCouplingAssign(G,a)
     % Number of edges
