@@ -78,25 +78,22 @@ function G = SyncCouplingAssign(G,a)
             G.Edges.edge_weight(eid) = G.Edges.edge_weight(eid) + G_temp.Edges.edge_weight(ei);
         end
 
-        % (ii) Among those nodes, find one with positive (out − in) sum
-        hi_nodes = nodesInSCC(has_in_edge(nodesInSCC) == 1);
-        bestNode = [];
-        if ~isempty(hi_nodes)
-            for u = hi_nodes.'
-                outSum = sum(G.Edges.edge_weight(G.Edges.EndNodes(:,1) == u & ...
-                    G.Edges.SCC_start == s & G.Edges.SCC_end == s));
-                inSum  = sum(G.Edges.edge_weight(G.Edges.EndNodes(:,2) == u & ...
-                    G.Edges.SCC_start == s & G.Edges.SCC_end == s));
-                diff = outSum - inSum;
-                if diff > 0
-                    bestNode = u;
-                    imbalanceIncrement = diff / 2;
-                    G.Nodes.imbalance(u) = G.Nodes.imbalance(u) + imbalanceIncrement;
-                    break;
-                end
-            end
+        % Compute the vertex imbalance of src and assign it to the
+        % imbalance variable of src node
 
-        % (iii) Distribute imbalance equally over incoming inter-SCC edges
+        outSum = sum(G.Edges.edge_weight(G.Edges.EndNodes(:,1) == src & ...
+                    G.Edges.SCC_start == s & G.Edges.SCC_end == s));
+        inSum  = sum(G.Edges.edge_weight(G.Edges.EndNodes(:,2) == src & ...
+                    G.Edges.SCC_start == s & G.Edges.SCC_end == s));
+        diff = outSum - inSum;
+        imbalanceIncrement = diff / 2;
+        G.Nodes.imbalance(src) = a + imbalanceIncrement;
+
+        % Find the nodes among the nodes of the current SCC with
+        % incoming edges from other SCCs
+        hi_nodes = nodesInSCC(has_in_edge(nodesInSCC) == 1);
+        
+        % Distribute imbalance equally over incoming inter-SCC edges
         for u = hi_nodes.'
             imb = G.Nodes.imbalance(u);
             incomingE = find(G.Edges.EndNodes(:,2) == u & ...
@@ -107,7 +104,6 @@ function G = SyncCouplingAssign(G,a)
                     G.Edges.edge_weight(e) = G.Edges.edge_weight(e) + share;
                 end
             end
-        end
         end
     end
 end
