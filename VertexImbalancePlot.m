@@ -32,7 +32,7 @@ function vertImb = VertexImbalancePlot(G)
     nodeLabels = arrayfun(@(x) num2str(x), vertImb, 'UniformOutput', false);
 
     % Plot the graph
-    h = plot(G, 'EdgeLabel', G.Edges.Weight, 'NodeLabel', nodeLabels);
+    h = plot(G, 'EdgeLabel', G.Edges.edge_weight, 'NodeLabel', nodeLabels);
 
     % Improve readability
     layout(h, 'force');                % force-directed layout
