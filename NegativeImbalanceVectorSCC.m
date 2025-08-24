@@ -1,30 +1,17 @@
-% NegativeImbalanceVectorSCC  — Add edge/node variables and compute weights & imbalance
-%   G = NegativeImbalanceVectorSCC(G, src, a)
+% NegativeImbalanceVectorSCC takes in a digraph and a vertex id and returns
+% a the same digraph with its edge weights updated such that the vertex
+% imbalances of all the verteices are negative
 %   Inputs:
 %     G   – strongly‑connected digraph
 %     src – source vertex index or name
-%     a   – scaling constant
 %   Outputs:
-%     G   – updated digraph, with:
-%           G.Edges.weight   – numeric weight per edge
-%           G.Nodes.imbalance – numeric imbalance per node
-%   And a plot of the graph with edge‑labels showing weight and node‑labels showing imbalance.
+%     G   – updated digraph, with the edge variable edge_weight updated
 
-function G = NegativeImbalanceVectorSCC(G, src, a)
+function G = NegativeImbalanceVectorSCC(G,src)
 
-% Add custom edge and node attributes, initialized to zero
-G.Edges.weight = zeros(numedges(G),1);
-G.Nodes.imbalance = zeros(numnodes(G),1);
-
-
-% For each target node (except src), find one directed path
 n = numnodes(G);
 
-G.Nodes.names = (1:n).';
-
-for t = 1:n
-    % if isequal(t,src) || isequal(findnode(G,src), findnode(G,t)), continue; end
-    
+for t = 1:n    
     if t==src
         continue;
     else
@@ -35,22 +22,16 @@ for t = 1:n
         for i = 1:L
             % weight contribution = (path_len − i + 1)
             w = (L-i+1);
-            G.Edges.weight(edgePath(i)) = G.Edges.weight(edgePath(i)) + w;
+            G.Edges.edge_weight(edgePath(i)) = G.Edges.edge_weight(edgePath(i)) + w;
         end
     end
 end
-% disp(G.Edges.weight.')
-% Scale edge weights by a
-G.Edges.weight = a * G.Edges.weight;
 
 % Compute imbalance for each node: outgoing minus incoming weight sums
 for v = 1:n
-    outgoing = sum(G.Edges.weight(G.outedges(v)));
-    incoming = sum(G.Edges.weight(G.inedges(v)));
+    outgoing = sum(G.Edges.edge_weight(G.outedges(v)));
+    incoming = sum(G.Edges.edge_weight(G.inedges(v)));
     G.Nodes.imbalance(v) = outgoing - incoming;
 end
 
-% Plot the graph
-plot(G, 'EdgeLabel', G.Edges.weight, 'NodeLabel', string(G.Nodes.imbalance));
-title(sprintf('Digraph with weight-scaled by %g and node imbalance', a));
 end
