@@ -55,29 +55,39 @@ function G = SyncCouplingAssign(G,a)
     uniqueSCCs = unique(bins);
 
     % Process each SCC
-    for s = uniqueSCCs
+ for s = uniqueSCCs
 
         % Extract the subgraph of the current SCC
         nodesInSCC = find(bins == s);
         G_SCC = subgraph(G,nodesInSCC);
+        
+        % In case G_SCC is a root SCC, we can select
+        % src arbitrarily otherwise, it is selected
+        % from among the nodes with incoming
+        % edges from other SCCs
+     
+        if(sum(has_in_edge(nodesInSCC))<1)
+            src = randi([1,numel(nodesInSCC)]);
+        else
+            nid = randsample(intersect(nodesInSCC,find(has_in_edge==1)),1);
+            src = find(G_SCC.Nodes.node_id==nid);
+        end
 
-        src = randsample(intersect(nodesInSCC,find(has_in_edge==1)),1);
-
-        % Call NegativeVertexImbalance and update edge weights in G
-        G_temp = NegativeImbalanceVectorSCC(G_SCC,src,a);
-        % Add G2 edge weights to G for matching edge_id
+        % Call NegativeVertexImbalanceSCC with G_SCC
+        G_temp = NegativeImbalanceVectorSCC(G_SCC,src);
+        % Add G_temp edge weights to G for matching edge_id
         for ei = 1:G_temp.numedges
             eid = G_temp.Edges.edge_id(ei);
             G.Edges.edge_weight(eid) = G.Edges.edge_weight(eid) + G_temp.Edges.edge_weight(ei);
         end
 
-        % Find the sum of all path lengths from src in G_SCC 
+        % Find the sum of path lengths from src in G_SCC 
         % by finding the largest value of vector imbalance
-        P_sum = max(-incidence(G_temp)*G_temp.edge_weight);
+        P_sum = max(-incidence(G_temp)*G_temp.Edges.edge_weight);
 
         % Scaling the negative vertex imbalance vector edge weights
         % by 2a
-        G_temp.edge_weight = 2*a*G_temp.edge_weight;
+        G_temp.Edges.edge_weight = 2*a*G_temp.Edges.edge_weight;
 
         % Call CycleBasisVector and update edge weights in G
         G_temp = CycleBasisVector(G_SCC);
@@ -85,7 +95,7 @@ function G = SyncCouplingAssign(G,a)
         % Scaling the cycle basis vector edge weights to meet
         % the synchronization condition
 
-        G_temp.edge_weight = (2*a/nodesInSCC)*(1+P_sum)*P_sum*G_temp.edge_weight;
+        G_temp.Edges.edge_weight = (2*a/numel(nodesInSCC))*(1+P_sum)*P_sum*G_temp.Edges.edge_weight;
 
         % Adding this to the edge weights of G by comparing edge ids
         for ei = 1:numedges(G_temp)
@@ -107,17 +117,18 @@ function G = SyncCouplingAssign(G,a)
         % incoming edges from other SCCs
         hi_nodes = nodesInSCC(has_in_edge(nodesInSCC) == 1);
 
-        % Distribute imbalance equally over incoming inter-SCC edges
-        for u = hi_nodes.'
-            imb = G.Nodes.imbalance(u);
-            incomingE = find(G.Edges.EndNodes(:,2) == u & ...
-                             G.Edges.SCC_start ~= G.Edges.SCC_end);
-            if ~isempty(incomingE)
-                share = abs(imb / numel(incomingE));
-                for e = incomingE.'
-                    G.Edges.edge_weight(e) = G.Edges.edge_weight(e) + share;
+        if (~isempty(hi_nodes))
+            % Distribute imbalance equally over incoming inter-SCC edges
+            for u = hi_nodes.'
+                imb = G.Nodes.imbalance(u);
+                incomingE = find(G.Edges.EndNodes(:,2) == u & ...
+                                G.Edges.SCC_start ~= G.Edges.SCC_end);
+                if ~isempty(incomingE)
+                    share = abs(imb / numel(incomingE));
+                    for e = incomingE.'
+                        G.Edges.edge_weight(e) = G.Edges.edge_weight(e) + share;
+                    end
                 end
             end
         end
-    end
 end
