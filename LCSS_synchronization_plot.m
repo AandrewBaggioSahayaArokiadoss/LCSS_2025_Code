@@ -1,95 +1,143 @@
-% Creates the plot for the synchronization of a dynamical network of
-% Lorentz oscillators, plots the image and stores the image data in an
-% excel sheet of the name "sync_data.xlsx"
-clc;
-clear;
-close all
+% SyncCouplingAssign takes in a digraph and a scalar and returns
+% the same digraph with its edge weights updated such that the vertex
+% imbalances of all the vertices are negative and the synchroniztion
+% conditions are satisfied
 
-syms a;
+%   Inputs:
+%     G – strongly‑connected digraph
+%     a – scalar parameter a
+%   Outputs:
+%     G   – updated digraph, with the edge variable edge_weight updated
 
-sigma = 10;
-rho = 25;
-beta = 8/3;
+function G = SyncCouplingAssign(G,a)
 
-a_num = -sigma+(beta*(beta+1)*(rho+sigma)^2)/(16*(beta-1)); %Lorentz Osillator "a" parameter
+    % Number of edges
+    m = G.numedges;
+    % Number of nodes
+    n = G.numnodes;
 
+    % Initialize edge and node properties
+    G.Edges.edge_weight = zeros(m,1);
+    G.Edges.SCC_start   = zeros(m,1);
+    G.Edges.SCC_end     = zeros(m,1);
+    G.Edges.edge_id     = (1:m).';
+    G.Nodes.node_id     = (1:n).';
+    G.Nodes.imblance    = zeros(n,1);
 
-w11 = [12*a+2 6*a+2 1 2*a+1 1].';
-w21 = [7*a a/2 a/2].';
+    % Compute strongly connected components
+    bins = conncomp(G, 'Type', 'strong');
 
-w1 = [w11;w21];
+    % Assign SCC_start and SCC_end for each edge
+    for e = 1:m
+        u = G.Edges.EndNodes(e,1);
+        v = G.Edges.EndNodes(e,2);
+        G.Edges.SCC_start(e) = bins(u);
+        G.Edges.SCC_end(e)   = bins(v);
+    end
 
-w2 = a*[3+60 1+60 0+30 1+60 0+60 3+30 6+30 0+30].';
+    % Initialize node property has_in_edge
+    has_in_edge = zeros(n, 1);
 
-w = [w1;w2]; %Weights computed using cycle basis and negative imbalance arc weight vector
+    % Mark nodes that have incoming edges from different SCCs
+    for e = 1:m
+        if G.Edges.SCC_start(e) ~= G.Edges.SCC_end(e)
+            v = G.Edges.EndNodes(e,2);
+            has_in_edge(v) = 1;
+        end
+    end
 
-Edge_label = string(w);
+    G.Nodes.has_in_edge = has_in_edge;
 
-w = double(subs(w,a,a_num));
+    % Number of SCCs
+    uniqueSCCs = unique(bins);
 
-tail = [1 2 3 3 4 8 8 7 8 6 7 9 10 5 5 7];
-head = [2 3 1 4 1 1 3 3 6 7 8 10 5 9 8 9];
+    % Process each SCC
+ for s = uniqueSCCs
 
-G = digraph(tail,head,w);
+        % Extract the subgraph of the current SCC
+        nodesInSCC = find(bins == s);
+        G_SCC = subgraph(G,nodesInSCC);
+        
+        % In case G_SCC is a root SCC, we can select
+        % src arbitrarily otherwise, it is selected
+        % from among the nodes with incoming
+        % edges from other SCCs
+     
+        if(sum(has_in_edge(nodesInSCC))<1)
+            src = randi([1,numel(nodesInSCC)]);
+            nid = G_SCC.Nodes.node_id(src);
+        else
+            nid = randsample(intersect(nodesInSCC,find(has_in_edge==1)),1);
+            src = find(G_SCC.Nodes.node_id==nid);
+        end
 
-N = G.numnodes; % Number of vertices
-numStates = 3; % Number of states
+        disp(nid)
 
-data_length = 20;
-t_end = 3;
-tSpan = linspace(0,t_end,data_length); % Time span
+        % Call NegativeVertexImbalanceSCC with G_SCC
+        G_temp = NegativeImbalanceVectorSCC(G_SCC,src);
 
-edge_weights = G.Edges.Weight;
+        % Find the sum of path lengths from src in G_SCC 
+        % by finding the largest value of vector imbalance
+        P_sum = max(-incidence(G_temp)*G_temp.Edges.edge_weight);
 
-EdgeLabel = round(edge_weights,2);
+        % Scaling the negative vertex imbalance vector edge weights
+        % by 2a
+        G_temp.Edges.edge_weight = 2*a*G_temp.Edges.edge_weight;
 
+        % Add G_temp edge weights to G for matching edge_id
+        for ei = 1:G_temp.numedges
+            eid = G_temp.Edges.edge_id(ei);
+            G.Edges.edge_weight(eid) = G.Edges.edge_weight(eid) + G_temp.Edges.edge_weight(ei);
+        end
 
-mu = 5;
-sigma = 10;
+        % Call CycleBasisVector and update edge weights in G
+        G_temp = CycleBasisVector(G_SCC);
 
-P = diag([1,0,0]);
+        % Scaling the cycle basis vector edge weights to meet
+        % the synchronization condition
 
-X0 = mu + sigma*rand(1,numStates*N); % Selecting initial conditions from Gaussian distribution
+        G_temp.Edges.edge_weight = (2*a/numel(nodesInSCC))*(1+P_sum)*P_sum*G_temp.Edges.edge_weight;
 
-[X,t] = SimulateCoupledSystems(@LorenzOscillator,tSpan,X0,G,P);
+        % Adding this to the edge weights of G by comparing edge ids
+        for ei = 1:numedges(G_temp)
+            eid = G_temp.Edges.edge_id(ei);
+            G.Edges.edge_weight(eid) = G.Edges.edge_weight(eid) + G_temp.Edges.edge_weight(ei);
+        end
 
-state_index = 1:numStates;
-state_index_rem = 1:numStates*N;
+        figure
+        VertexImbalancePlot(G)
 
-colors = lines(N);
-linestyle = {'-','--','-.',':','-','--','-.',':','-','--'};
-lw = [2*ones(1,4) 1.5*ones(1,4) 1 1];
-mark = {'none','none','none','none','*','*','o','o','.','.'};
+        % Compute the vertex imbalance of src and assign it to the
+        % imbalance variable of src node
 
-E = zeros(N,length(t));
-cols = ['A' 'B' 'C' 'D' 'E' 'F' 'G' 'H' 'I' 'J' 'K'];
-range_end = length(t)+1;
-filename = 'sync_data.xlsx';
+        outSum = sum(G.Edges.edge_weight(G.Edges.EndNodes(:,1) == nid & ...
+                    G.Edges.SCC_start == s & G.Edges.SCC_end == s));
+        inSum  = sum(G.Edges.edge_weight(G.Edges.EndNodes(:,2) == nid & ...
+                    G.Edges.SCC_start == s & G.Edges.SCC_end == s));
+        diff = outSum - inSum;
 
-figure
-grid on
-hold on
+        % Find the nodes among the nodes of the current SCC with
+        % incoming edges from other SCCs
+        hi_nodes = nodesInSCC(has_in_edge(nodesInSCC) == 1);
 
-for i = 1:N
-    slice_i = (i-1)*numStates+state_index;
-    slice_rem = setdiff(state_index_rem,slice_i);
-    e = vecnorm(repmat(X(:,slice_i),1,N-1)-X(:,slice_rem),2,2).';
-    E(i,:) = e;
-    plot(t.',e,'Color',colors(i,:),'LineWidth',lw(i),'LineStyle',linestyle{i}(:),'Marker',mark{i}(:),'MarkerFaceColor','none','DisplayName', sprintf('System %d',i))
-    range_str = strcat(cols(i+1),'2:',cols(i+1),string(range_end));
-    writematrix(e.','sync_data.xlsx','Sheet',1,'Range',range_str);
-    writematrix(strcat('e',string(i)),filename,'Sheet',1,'Range',strcat(cols(i+1),string(1)));
+        if (~isempty(hi_nodes))
+            % Distribute imbalance equally over incoming inter-SCC edges
+            for u = hi_nodes
+                incomingE = find(G.Edges.EndNodes(:,2) == u & ...
+                                G.Edges.SCC_start ~= G.Edges.SCC_end);
+                if(u==nid)
+                    inedge_weight = a + (diff/2);
+                else
+                    inedge_weight = a;
+                end
+                if ~isempty(incomingE)
+                    share = inedge_weight/numel(incomingE);
+                    for e = incomingE.'
+                        G.Edges.edge_weight(e) = G.Edges.edge_weight(e) + share;
+                    end
+                end
+            end
+        end
+        figure
+        VertexImbalancePlot(G)
 end
-
-xlabel('Time ')
-ylabel('Sum of square of pairwise distances')
-title('Synchronization of 10 Lorentz Oscillators');
-legend show
-grid on
-hold off
-
-range_str = strcat(cols(1),'2:',cols(1),string(range_end));
-writematrix(t,filename,'Sheet',1,'Range',range_str);
-writematrix('t',filename,'Sheet',1,'Range','A1');
-
-
