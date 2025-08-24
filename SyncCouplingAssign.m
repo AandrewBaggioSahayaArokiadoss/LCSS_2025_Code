@@ -91,15 +91,13 @@ function G = SyncCouplingAssign(G,a)
         % Call CycleBasisVector and update edge weights in G
         G_temp = CycleBasisVector(G_SCC);
 
-        % Scaling the cycle basis vector edge weights to meet
-        % the synchronization condition
-
-        G_temp.Edges.edge_weight = (2*a/numel(nodesInSCC))*(1+P_sum)*P_sum*G_temp.Edges.edge_weight;
-
         % Adding this to the edge weights of G by comparing edge ids
         for ei = 1:numedges(G_temp)
             eid = G_temp.Edges.edge_id(ei);
-            G.Edges.edge_weight(eid) = G.Edges.edge_weight(eid) + G_temp.Edges.edge_weight(ei);
+            % Scaling the cycle basis vector edge weights  and adding them
+            % to G's edge weights to meet the synchronization condition
+            G.Edges.edge_weight(eid) = G.Edges.edge_weight(eid) +  ...
+                (2*a/numel(nodesInSCC))*(1+P_sum)*P_sum*G_temp.Edges.edge_weight(ei);
         end
 
         figure
@@ -108,10 +106,8 @@ function G = SyncCouplingAssign(G,a)
         % Compute the vertex imbalance of src and assign it to the
         % imbalance variable of src node
 
-        outSum = sum(G.Edges.edge_weight(G.Edges.EndNodes(:,1) == nid & ...
-                    G.Edges.SCC_start == s & G.Edges.SCC_end == s));
-        inSum  = sum(G.Edges.edge_weight(G.Edges.EndNodes(:,2) == nid & ...
-                    G.Edges.SCC_start == s & G.Edges.SCC_end == s));
+        outSum = sum(G_temp.Edges.edge_weight(G_temp.Edges.EndNodes(:,1) == src));
+        inSum  = sum(G_temp.Edges.edge_weight(G_temp.Edges.EndNodes(:,2) == src));
         diff = outSum - inSum;
 
         % Find the nodes among the nodes of the current SCC with
@@ -123,19 +119,18 @@ function G = SyncCouplingAssign(G,a)
             for u = hi_nodes
                 incomingE = find(G.Edges.EndNodes(:,2) == u & ...
                                 G.Edges.SCC_start ~= G.Edges.SCC_end);
-                if(u==nid)
-                    inedge_weight = a + (diff/2);
-                else
+                if(u~=nid)
                     inedge_weight = a;
+                else
+                    inedge_weight = a + (diff/2);
                 end
-                if ~isempty(incomingE)
-                    share = inedge_weight/numel(incomingE);
-                    for e = incomingE.'
-                        G.Edges.edge_weight(e) = G.Edges.edge_weight(e) + share;
-                    end
+                share = inedge_weight/numel(incomingE);
+                for e = incomingE.'
+                    G.Edges.edge_weight(e) = G.Edges.edge_weight(e) + share;
                 end
             end
         end
-        figure
-        VertexImbalancePlot(G)
+ end
+ figure
+ VertexImbalancePlot(G)
 end
