@@ -119,8 +119,10 @@ function G = SyncCouplingAssign(G,a)
 
         if (~isempty(hi_nodes))
             % Distribute imbalance equally over incoming inter-SCC edges
-            for u = hi_nodes.'
+            for u = hi_nodes
                 imb = G.Nodes.imbalance(u);
+                % disp(size(G.Edges.EndNodes(:,2) == u))
+                % disp(size(G.Edges.SCC_start))
                 incomingE = find(G.Edges.EndNodes(:,2) == u & ...
                                 G.Edges.SCC_start ~= G.Edges.SCC_end);
                 if ~isempty(incomingE)
