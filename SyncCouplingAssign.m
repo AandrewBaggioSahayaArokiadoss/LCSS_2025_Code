@@ -63,15 +63,13 @@ function G = SyncCouplingAssign(G,a)
         % from among the nodes with incoming
         % edges from other SCCs
      
-        if(sum(has_in_edge(nodesInSCC))<1)
-            src = randi([1,numel(nodesInSCC)]);
-            nid = G_SCC.Nodes.node_id(src);
+        if(sum(G_SCC.Nodes.has_in_edge)<1)
+            nid =  randsample(nodesInSCC,1)
         else
-            nid = randsample(intersect(nodesInSCC,find(has_in_edge==1)),1);
-            src = find(G_SCC.Nodes.node_id==nid);
+            nid = randsample(intersect(nodesInSCC,find(has_in_edge==1)),1)
+            
         end
-
-        disp(nid)
+        src = find(G_SCC.Nodes.node_id==nid)
 
         % Call NegativeVertexImbalanceSCC with G_SCC
         G_temp = NegativeImbalanceVectorSCC(G_SCC,src);
