@@ -1,4 +1,4 @@
-The matlab codes used for checking the computations of my first submission to LCS-2025
+This project consists of several MATLAB functions designed to simulate and analyze the synchronization of coupled dynamical systems, specifically a network of Lorenz oscillators. The code manipulates graph structures to assign specific edge weights that satisfy conditions for achieving network synchronization. It also includes functions for simulating the system's dynamics and plotting the results.
 1) SCC_vertices_with_inedges – Adds a variable "is_inedge" to each vertex of the input digraph, which indicates whether a vertex has incoming edges from other SCCs.
 2) mergeUpstreamSCCs - For each SCC in the given digraph, it merges all its upstream SCCs into a single digraph and returns all the adjacency matrices of these digraphs into a matrix of size maxbinsize X maxbinsize*no_of_SCCs
 3) coupledDynamics - Given the state vector for the entire dynamical network, gives dX/dt for the entire network
