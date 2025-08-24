@@ -7,8 +7,8 @@
 
 function G = CycleBasisVector(G)
 
-m = G.numedges;
-null_weight = zeros(m,1);
+% Initializing the weights
+null_weight = zeros(G.numedges,1);
 
 % Keep track until all null_weight > 0
 while any(null_weight == 0)
