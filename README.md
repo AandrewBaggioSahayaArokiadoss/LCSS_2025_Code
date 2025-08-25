@@ -1,2 +1,26 @@
-This project consists of several MATLAB functions designed to simulate and analyze the synchronization of coupled dynamical systems, specifically a network of Lorenz oscillators. The code manipulates graph structures to assign specific edge weights that satisfy conditions for achieving network synchronization. It also includes functions for simulating the system's dynamics and plotting the results.
-LCSS_synchronization_plot.m is the main script that initiates the entire process. It sets up the parameters, constructs the graph, and then calls the other functions. The script first calculates the weights symbolically, which involves concepts from NegativeImbalanceVector.m and CycleBasisVector.m. Although it doesn't call them directly, it uses the underlying mathematical principles these functions implement. SimulateCoupledSystems.m is called by the main script to start the time-evolution of the network. It, in turn, calls the ODE solver. The ODE solver in SimulateCoupledSystems.m repeatedly calls coupledDynamics.m to get the time derivative of the system's state. coupledDynamics.m uses LorenzOscillator.m to get the individual dynamics for each node in the network. SyncCouplingAssign.m is a key function for assigning the synchronization-enabling weights. It calls other functions to help with this task: SCC_vertices_with_inedges.m to find nodes that have incoming edges from other components. NegativeImbalanceVector.m to compute the negative imbalance vectors. CycleBasisVector.m to ensure the vertex imbalances are unaltered and all edge weights are non-zero. NegativeImbalanceVector.m handles different graph structures and calls NegativeImbalanceVectorSCC.m to perform the core imbalance vector computation on strongly connected subgraphs.
+# Network Synchronization of Lorenz Oscillators
+
+MATLAB and Python code for simulating and visualizing the synchronization of a network of coupled Lorenz oscillators.  
+Uses **graph theory** (weighted Laplacian matrices, vertex imbalances) to achieve and analyze network synchronization.
+
+---
+
+## Overview
+- **MATLAB**: Implements the coupled Lorenz network, synchronization conditions, and simulation (`LCSS_synchronization_plot.m`).  
+- **Python**: Jupyter Notebook for visualizing results (`synchronization_plot.ipynb`).  
+
+---
+
+## Files
+- `LCSS_synchronization_plot.m` – Main simulation script (saves results to `sync_data.xlsx`)  
+- `CoupledDynamics.m`, `SimulateCoupledSystems.m`, `LorenzOscillator.m` – Dynamics + solver  
+- `SyncCouplingAssign.m`, `NegativeImbalanceVectorSCC.m`, `CycleBasisVector.m` – Coupling/imbalance assignment functions  
+- `VertexImbalancePlot.m` – Visualization of graph imbalances  
+- `synchronization_plot.ipynb` – Python visualization of synchronization error  
+
+---
+
+## How to Run
+1. **MATLAB**  
+   ```matlab
+   run('LCSS_synchronization_plot.m')
