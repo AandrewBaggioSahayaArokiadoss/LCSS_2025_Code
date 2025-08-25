@@ -1,17 +1,28 @@
-% The system takes in the ODE of an oscillator, the connectivity digraph 
-% and the P matrix (in paper 10.1109/TCSI.2015.2395632)
-% It returns the state vector for all the dynamical systems in the network
+% SimulateCoupledSystems integrates a network of coupled oscillators.
+%
+%   [X,t] = SimulateCoupledSystems(systemDynamics,tSpan,X0,G,P)
+%
+%   Inputs:
+%     systemDynamics – function handle for oscillator dynamics (dx/dt = f(x))
+%     tSpan          – time vector for simulation
+%     X0             – initial condition vector for all oscillators
+%     G              – digraph defining network connectivity
+%     P              – projection matrix (coupling applied to specific states)
+%
+%   Outputs:
+%     X – simulated state trajectories (rows: time, cols: state variables)
+%     t – time vector returned by ode45
 
-function [X,t] = SimulateCoupledSystems(systemDynamics,tSpan,X0,G,P)   
+function [X,t] = SimulateCoupledSystems(systemDynamics,tspan,X0,G,P)   
 
-    % Number of nodes (oscillators)
-    N = G.numnodes;
+    %% Build weighted Laplacian matrix from graph
+    % Weighted adjacency matrix (transpose because digraph adjacency
+    % gives row→col edges, but we want incoming edges in rows)
+    A = full(adjacency(G, G.Edges.edge_weight)).';
 
-    A = full(adjacency(G,"weighted")).';
+    % In-degree Laplacian (row sums = in-degree weights)
+    L = diag(sum(A,2)) - A;
 
-    % Compute the Laplacian matrix from the adjacency matrix
-    L = diag(sum(A,2))-A; % In-degree Laplacian
-
-    % Solve the coupled system using ode45
-    [t, X] = ode45(@(t,X) coupledDynamics(t,X,systemDynamics,L,P), tSpan, X0);  
+    %% Simulate network dynamics with ode45
+    [t, X] = ode45(@(t,X) coupledDynamics(t,X,systemDynamics,L,P),tspan,X0);  
 end
