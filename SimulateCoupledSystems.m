@@ -24,5 +24,5 @@ function [X,t] = SimulateCoupledSystems(systemDynamics,tspan,X0,G,P)
     L = diag(sum(A,2)) - A;
 
     %% Simulate network dynamics with ode45
-    [t, X] = ode45(@(t,X) coupledDynamics(t,X,systemDynamics,L,P),tspan,X0);  
+    [t, X] = ode45(@(t,X) CoupledDynamics(t,X,systemDynamics,L,P),tspan,X0);  
 end
