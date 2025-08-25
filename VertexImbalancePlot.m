@@ -1,40 +1,40 @@
-% VertexImbalancePlot takes in a digraph and returns
-% a the vertex imbalance vector of the digraph and
-% plots the digraph with its edge weights and the respective 
-% verteximbalances
+% VertexImbalancePlot computes the vertex imbalance vector of a digraph
+% and plots the graph with edge weights and vertex imbalances.
+%
 %   Inputs:
-%     G   – strongly‑connected digraph
+%     G – strongly connected digraph
+%
 %   Outputs:
-%     vertImb   – vertex imbalance vector
-
+%     vertImb – vertex imbalance vector
+%
 function vertImb = VertexImbalancePlot(G)
-    % Validate input
-    assert(isa(G, 'digraph'), 'Input must be a digraph object.');
 
-    % Number of nodes
-    n = numnodes(G);
+    %% Validate input
+    assert(isa(G,'digraph'), 'Input must be a digraph object.');
 
-    % Extract edge list and weights
-    s = G.Edges.EndNodes(:,1);  % sources
-    t = G.Edges.EndNodes(:,2);  % targets
-    w = G.Edges.edge_weight;         % edge weights
+    %% Setup
+    n = numnodes(G);                         % number of nodes
+    s = G.Edges.EndNodes(:,1);               % source nodes of edges
+    t = G.Edges.EndNodes(:,2);               % target nodes of edges
+    w = G.Edges.edge_weight;                 % edge weights
 
-    % Initialize imbalance vector
+    %% Compute vertex imbalance
     vertImb = zeros(n,1);
-
-    % Accumulate outgoing and incoming weights
     for k = 1:numel(w)
-        vertImb(s(k)) = vertImb(s(k)) + w(k);  % outgoing
-        vertImb(t(k)) = vertImb(t(k)) - w(k);  % incoming
+        vertImb(s(k)) = vertImb(s(k)) + w(k);   % outgoing weight
+        vertImb(t(k)) = vertImb(t(k)) - w(k);   % incoming weight
     end
 
-    % Create node labels
-    nodeLabels = arrayfun(@(x) num2str(x), vertImb, 'UniformOutput', false);
+    %% Plot graph with labels
+    % Node labels: imbalance values
+    nodeLabels = arrayfun(@num2str, vertImb, 'UniformOutput', false);
 
-    % Plot the graph
-    h = plot(G, 'EdgeLabel', G.Edges.edge_weight, 'NodeLabel', nodeLabels);
+    % Edge labels: rounded weights
+    h = plot(G, ...
+        'EdgeLabel', round(G.Edges.edge_weight,3), ...
+        'NodeLabel', nodeLabels);
 
-    % Improve readability
-    layout(h, 'force');                % force-directed layout
+    % Layout and styling
+    layout(h,'force');   % force-directed layout
     title('Digraph with Vertex Imbalance and Edge Weights');
 end
