@@ -30,9 +30,11 @@ function vertImb = VertexImbalancePlot(G)
     nodeLabels = arrayfun(@num2str, vertImb, 'UniformOutput', false);
 
     % Edge labels: rounded weights
-    h = plot(G, ...
-        'EdgeLabel', round(G.Edges.edge_weight,3), ...
-        'NodeLabel', nodeLabels);
+    % h = plot(G, ...
+    %     'EdgeLabel', round(G.Edges.edge_weight,3), ...
+    %     'NodeLabel', G.Nodes.node_id);
+
+    h = plot(G,'NodeLabel',strcat(string(G.Nodes.node_id),'(',nodeLabels,')'));
 
     % Layout and styling
     layout(h,'force');   % force-directed layout
