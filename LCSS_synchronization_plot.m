@@ -33,7 +33,7 @@ data_length1 = 25;
 data_length2 = 25;
 
 t_end1 = 3;                  % End of first interval
-t_end2 = 6;                  % End of second interval
+t_end2 = 3;                  % End of second interval
 tspan1 = linspace(0, t_end1, data_length1);
 tspan2 = linspace(0, t_end2, data_length2);
 
@@ -42,8 +42,8 @@ G1 = SyncCouplingAssign(G1, a);
 G2 = SyncCouplingAssign(G2, a);
 
 %% Initial conditions
-x_mean = 10; 
-x_std  = 5;
+x_mean = 5; 
+x_std  = 2;
 P      = diag([1, 0, 0]);                    % Projection matrix
 X0     = x_mean + x_std*rand(1, numStates*N);
 
