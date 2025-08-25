@@ -23,7 +23,6 @@ function G = SyncCouplingAssign(G,a)
 
     % Initialize node properties
     G.Nodes.node_id   = (1:n).';
-    G.Nodes.imbalance  = zeros(n,1);
 
     %% Strongly connected components
     bins = conncomp(G,'Type','strong');
@@ -62,21 +61,20 @@ function G = SyncCouplingAssign(G,a)
         if (sum(has_in_edge(nodesInSCC)) < 1)
             nid = randsample(nodesInSCC,1);
         else
-            nid = randsample(and(bins == s,has_in_edge.'>0),1);
+            nid = randsample(find(and(bins == s,has_in_edge.'>0)),1);
         end
-        disp(nid)
-        disp(G_SCC.Nodes.node_id)
+
         src = find(G_SCC.Nodes.node_id == nid);
 
         %% Compute negative imbalance vector for this SCC
         G_temp = NegativeImbalanceVectorSCC(G_SCC,src);
 
         % Path length sum 
-        P_sum = max(-incidence(G_temp) * G_temp.Edges.edge_weight);
+        P_sum = max(-incidence(G_temp)*G_temp.Edges.edge_weight);
 
         % Scale negative imbalance edge weights according 
         % to the theorem in my paper
-        G_temp.Edges.edge_weight = 2*a * G_temp.Edges.edge_weight;
+        G_temp.Edges.edge_weight = 2*a*G_temp.Edges.edge_weight;
 
         % Update global graph edge weights
         for ei = 1:G_temp.numedges
