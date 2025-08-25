@@ -15,20 +15,33 @@ beta  = 8/3;       % Beta parameter
 a = -sigma + (beta*(beta+1)*(rho+sigma)^2) / (16*(beta-1));
 
 %% Define the directed network (graph)
-tail = [1 2 3 3 4 8 8 7 8 6 7 9 10 5 5 7];
-head = [2 3 1 4 1 1 3 3 6 7 8 10 5 9 8 9];
-G    = digraph(tail,head);
+tail1 = [1 2 3 3 4 8 8 7 8 6 7 9 10 5 5 7];
+head1 = [2 3 1 4 1 1 3 3 6 7 8 10 5 9 8 9];
+G1    = digraph(tail1,head1);
 
-N         = G.numnodes;   % Number of oscillators (nodes)
+N1         = G1.numnodes;   % Number of oscillators (nodes)
+numStates1 = 3;            % Dimension of each oscillator state
+
+tail2 = [1 2 2 3 3 4 1 4 2 3 4 5 5 6 7 8 8 8 7 9 10];
+head2 = [2 1 3 1 4 1 5 5 6 6 7 6 7 8 5 6 7 9 9 10 9];
+G2    = digraph(tail2,head2);
+
+N         = 10;   % Number of oscillators (nodes)
 numStates = 3;            % Dimension of each oscillator state
 
 %% Simulation settings
-data_length = 25;                          % Number of time points
-t_end       = 3;                          % Final simulation time
-tSpan       = linspace(0,t_end,data_length);
+data_length1 = 25;
+data_length2 = 25;
+t_start1     = 0;
+t_end1       = 3;
+t_start2     = t_end1;
+t_end2       = 6;
+tspan1       = linspace(0,t_end1,data_length1);
+tspan2       = linspace(0,t_end2,data_length2);
 
 % Assign coupling strengths
-G = SyncCouplingAssign(G,a);
+G1 = SyncCouplingAssign(G1,a);
+G2 = SyncCouplingAssign(G2,a);
 
 %% Mean and std for initial conditions
 x_mean = 10; 
@@ -38,10 +51,23 @@ P  = diag([1,0,0]);                        % Projection matrix
 X0 = x_mean + x_std*rand(1,numStates*N);   % Gaussian random initial conditions
 
 % Simulate coupled Lorenz systems
-[X,t] = SimulateCoupledSystems(@LorenzOscillator,tSpan,X0,G,P);
+[X1,t1] = SimulateCoupledSystems(@LorenzOscillator,tspan1,X0,G1,P);
+
+X0 = X1(end,:);
+
+[X2,t2] = SimulateCoupledSystems(@LorenzOscillator,tspan2,X0,G2,P);
+
+% X = [X1(1:end-1,:);X2];
+% t = [t1(1:end-1,:);t2+t1(end)];
+
+X = X2;
+t = t2;
+
+size(X)
+size(t)
 
 %% Visualization settings
-state_index      = 1:numStates;
+state_indices      = 1:numStates;
 state_index_full = 1:numStates*N;
 
 colors    = lines(N);
@@ -50,9 +76,9 @@ lw        = [2*ones(1,4) 1.5*ones(1,4) 1 1];
 markers   = {'none','none','none','none','*','*','o','o','.','.'};
 
 %% Data storage setup
-E          = zeros(N,length(t));             % Pairwise error storage
+E          = zeros(N,size(t,1));             % Pairwise error storage
 cols       = 'ABCDEFGHIJK';                  % Excel column labels
-range_end  = length(t)+1;
+range_end  = size(t,1)+1;
 filename   = 'sync_data.xlsx';
 
 %% Plot synchronization errors
@@ -61,7 +87,7 @@ hold on; grid on;
 
 for i = 1:N
     % Indices for this oscillator
-    slice_i   = (i-1)*numStates + state_index;
+    slice_i   = (i-1)*numStates + state_indices;
     slice_rem = setdiff(state_index_full,slice_i);
 
     % Compute synchronization error
