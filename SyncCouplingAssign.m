@@ -23,7 +23,7 @@ function G = SyncCouplingAssign(G,a)
 
     % Initialize node properties
     G.Nodes.node_id   = (1:n).';
-    G.Nodes.imblance  = zeros(n,1);
+    G.Nodes.imbalance  = zeros(n,1);
 
     %% Strongly connected components
     bins = conncomp(G,'Type','strong');
@@ -58,13 +58,14 @@ function G = SyncCouplingAssign(G,a)
         % Root SCC selection:
         %   - If no incoming edges, choose any node
         %   - Otherwise, choose among nodes with incoming inter-SCC edges
-        if sum(G_SCC.Nodes.has_in_edge) < 1
-            nid      = randsample(nodesInSCC,1);
-            root_SCC = true;
+
+        if (sum(has_in_edge(nodesInSCC)) < 1)
+            nid = randsample(nodesInSCC,1);
         else
-            nid      = randsample(intersect(nodesInSCC,find(has_in_edge==1)),1);
-            root_SCC = false;
+            nid = randsample(and(bins == s,has_in_edge.'>0),1);
         end
+        disp(nid)
+        disp(G_SCC.Nodes.node_id)
         src = find(G_SCC.Nodes.node_id == nid);
 
         %% Compute negative imbalance vector for this SCC
