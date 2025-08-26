@@ -1,14 +1,10 @@
-# Mount Google Drive
-from google.colab import drive
-drive.mount('/content/drive')
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 
 # ===== File path to sync_data.xlsx =====
-file_path = '/content/drive/My Drive/synchronization_data.xlsx'  # Adjust if needed
+file_path = 'synchronization_data.xlsx'  # Excel file should be in the same folder as this script
 
 # ===== Load data =====
 df = pd.read_excel(file_path, sheet_name=0)
@@ -54,7 +50,9 @@ ax.axvline(x=1.5, color='black', linestyle='--', linewidth=2)
 ax.legend(fontsize=9, loc='upper right', frameon=False, ncol=2)
 ax.grid(True)
 
-plt.xlim(0,3)
-plt.ylim(0,5.5)
+# Axis limits
+plt.xlim(0, 3)
+plt.ylim(0, 5.5)
+
 plt.tight_layout()
 plt.show()
