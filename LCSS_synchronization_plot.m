@@ -72,7 +72,7 @@ markers   = {'none','none','none','none','*','*','o','o','.','.'};
 %% Data storage setup
 E         = zeros(N, length(t));   % Synchronization error matrix
 cols      = 'ABCDEFGHIJK';         % Excel column labels
-filename  = 'sync_data.xlsx';
+filename  = 'synchronization_data.xlsx';
 range_end = length(t) + 1;
 
 %% Plot synchronization errors
@@ -111,3 +111,4 @@ hold off;
 %% Save time vector to Excel
 writematrix(t, filename, 'Sheet', 1, 'Range', strcat(cols(1),'2:',cols(1),string(range_end)));
 writematrix('t', filename, 'Sheet', 1, 'Range', 'A1');
+disp(strcat(cols(1),'2:',cols(1),string(range_end)))
