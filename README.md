@@ -65,7 +65,7 @@ The core of this project lies in a set of MATLAB scripts that model and simulate
 
 2. **Visualize in Python**  
    Open `synchronization_plot.ipynb` in Jupyter (or Google Colab).  
-   Ensure `sync_data.xlsx` is accessible.  
+   Ensure `synchronization_data.xlsx` is accessible.  
    Run the notebook cells to produce synchronization plots.  
 
 ---
