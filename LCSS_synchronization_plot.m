@@ -1,70 +1,113 @@
-# Mount Google Drive
-from google.colab import drive
-drive.mount('/content/drive')
+% Synchronization of a dynamical network of Lorenz oscillators
+% ------------------------------------------------------------
+% This script simulates the synchronization of 10 Lorenz oscillators 
+% over two time intervals with different connectivity digraphs (G1 and G2).
+% Synchronization error data is saved in "sync_data.xlsx".
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-import os
+clc; clear; close all;
 
-# File path to Excel data
-file_path = '/content/drive/My Drive/sync_data.xlsx'  # Update if needed
+%% Lorenz oscillator parameters
+sigma = 10;
+rho   = 25;
+beta  = 8/3;
 
-# Load first sheet
-df = pd.read_excel(file_path, sheet_name=0)
+% Coupling strength (analytically derived)
+a = -sigma + (beta*(beta+1)*(rho+sigma)^2) / (16*(beta-1));
 
-# Extract B1:K20 (transpose: each row = oscillator series)
-E = df.iloc[0:20, 1:11].to_numpy().T
+%% Define connectivity digraphs
+% Connectivity for first time interval
+tail1 = [1 2 3 3 4 8 8 7 8 6 7 9 10 5 5 7];
+head1 = [2 3 1 4 1 1 3 3 6 7 8 10 5 9 8 9];
+G1    = digraph(tail1, head1);
 
-# Axis limits
-x_min, x_max = 0, 19
-y_min, y_max = 0, np.max(E)
+% Connectivity for second time interval
+tail2 = [1 2 2 3 3 4 1 4 2 3 4 5 5 6 7 8 8 8 7 9 10 1];
+head2 = [2 1 3 1 4 1 5 5 6 6 7 6 7 8 5 6 7 9 9 10 9 10];
+G2    = digraph(tail2, head2);
 
-# Create figure
-fig, ax = plt.subplots(figsize=(10, 6))
+N         = 10;  % Number of oscillators (nodes)
+numStates = 3;   % State dimension of each oscillator
 
-# Style options
-colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', '#FF7F0E', '#8B0000', '#006400']
-markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', '*', 'h']
-linestyles = ['-', '--', '-.', ':', (0, (5, 5)), (0, (3, 5, 1, 5)),
-              (0, (3, 1, 1, 1)), (0, (5, 10)), (0, (3, 10, 1, 10)), (0, (1, 1))]
+%% Simulation settings
+data_length1 = 25;
+data_length2 = 25;
+t_end1 = 1.5;                  % End of first interval
+t_end2 = 1.5;                  % End of second interval
+tspan1 = linspace(0, t_end1, data_length1);
+tspan2 = linspace(0, t_end2, data_length2);
 
-# Plot each oscillator
-for i in range(E.shape[0]):
-    ax.plot(
-        range(E.shape[1]),
-        E[i],
-        label=f'Oscillator {i+1}',
-        color=colors[i % len(colors)],
-        marker=markers[i % len(markers)],
-        linestyle=linestyles[i % len(linestyles)],
-        linewidth=2,
-        markersize=6
-    )
+% Assign coupling strengths
+G1 = SyncCouplingAssign(G1, a);
+G2 = SyncCouplingAssign(G2, a);
 
-# Formatting
-ax.set_xlim(x_min, x_max)
-ax.set_ylim(y_min, y_max)
-ax.set_xticks(range(0, 20, 1), labels=[str(i) for i in range(0, 20, 1)])
-ax.set_xlabel("Time steps", fontsize=12)
-ax.set_ylabel("Sum of squares of pairwise distances", fontsize=12)
-ax.set_title("Synchronization of 10 Lorentz oscillators", fontsize=14, fontweight='bold')
-ax.legend(fontsize=9, loc='upper right', frameon=False, ncol=2)
-ax.grid(True)
+%% Initial conditions
+x_mean = 0; 
+x_std  = 2;
+P      = diag([1, 0, 0]);                    % Projection matrix
+X0     = x_mean + x_std*rand(1, numStates*N);
 
-plt.tight_layout()
+%% Simulate coupled Lorenz systems
+% First interval (graph G1)
+[X1, t1] = SimulateCoupledSystems(@LorenzOscillator, tspan1, X0, G1, P);
 
-# Save as PDF and EPS
-save_dir = os.path.dirname(file_path)
-pdf_path = os.path.join(save_dir, "Synchronization_image.pdf")
-eps_path = os.path.join(save_dir, "Synchronization_image.eps")
+% Use final state from first interval as initial state for second
+X0 = X1(end,:);
 
-plt.savefig(pdf_path, format='pdf', bbox_inches='tight')
-plt.savefig(eps_path, format='eps', bbox_inches='tight')
+% Second interval (graph G2)
+[X2, t2] = SimulateCoupledSystems(@LorenzOscillator, tspan2, X0, G2, P);
 
-# Mark connectivity change
-plt.axvline(x=1.5, linestyle='--', color='black', label='Connectivity Change')
+% Concatenate results from both intervals
+X = [X1(1:end-1,:); X2];
+t = [t1(1:end-1,:); t2 + t1(end)];
 
-plt.show()
+%% Visualization settings
+state_indices   = 1:numStates;
+state_index_all = 1:numStates*N;
 
-print(f"Files saved:\n{pdf_path}\n{eps_path}")
+colors    = lines(N);
+linestyle = {'-','--','-.',':','-','--','-.',':','-','--'};
+lw        = [2*ones(1,4) 1.5*ones(1,4) 1 1];
+markers   = {'none','none','none','none','*','*','o','o','.','.'};
+
+%% Data storage setup
+E         = zeros(N, length(t));   % Synchronization error matrix
+cols      = 'ABCDEFGHIJK';         % Excel column labels
+filename  = 'sync_data.xlsx';
+range_end = length(t) + 1;
+
+%% Plot synchronization errors
+figure; hold on; grid on;
+
+for i = 1:N
+    % Extract state indices for oscillator i
+    slice_i   = (i-1)*numStates + state_indices;
+    slice_rem = setdiff(state_index_all, slice_i);
+
+    % Synchronization error (L2 distance from others)
+    e = vecnorm(repmat(X(:,slice_i),1,N-1) - X(:,slice_rem), 2, 2).';
+    E(i,:) = e;
+
+    % Plot error trajectory
+    plot(t, e, ...
+        'Color', colors(i,:), ...
+        'LineWidth', lw(i), ...
+        'LineStyle', linestyle{i}, ...
+        'Marker', markers{i}, ...
+        'MarkerFaceColor', 'none', ...
+        'DisplayName', sprintf('System %d', i));
+
+    % Save to Excel
+    range_str = strcat(cols(i+1),'2:',cols(i+1),string(range_end));
+    writematrix(e.', filename,'Sheet',1,'Range',range_str);
+    writematrix("e"+i, filename,'Sheet',1,'Range',cols(i+1)+"1");
+end
+
+xlabel('Time');
+ylabel('Synchronization error (L2 norm)');
+title('Synchronization of 10 Lorenz Oscillators');
+legend show;
+hold off;
+
+%% Save time vector to Excel
+writematrix(t, filename, 'Sheet', 1, 'Range', strcat(cols(1),'2:',cols(1),string(range_end)));
+writematrix('t', filename, 'Sheet', 1, 'Range', 'A1');
