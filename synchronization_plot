@@ -1,4 +1,4 @@
-# Mount Google Drive
+# ===== Mount Google Drive =====
 from google.colab import drive
 drive.mount('/content/drive')
 
@@ -7,31 +7,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-# ===== File path to sync_data.xlsx =====
-file_path = '/content/drive/My Drive/synchronization_data.xlsx'  # Adjust if needed
+# ===== File paths =====
+# Path to input Excel file
+file_path = '/content/drive/My Drive/synchronization_data.xlsx'  
 
-# ===== Load data =====
+# Path to save the output figure (EPS format)
+save_path = '/content/drive/My Drive/Synchronization_image.eps'
+
+# ===== Load data from Excel =====
 df = pd.read_excel(file_path, sheet_name=0)
 
-# Drop completely empty rows (if any) just in case
+# Drop completely empty rows (if any)
 df = df.dropna(how='all')
 
-# Load t from column A, starting from row 2 until data ends
-t = df.iloc[0:, 0].to_numpy()
+# Extract time values from column A
+t = df.iloc[:, 0].to_numpy()
 
-# Load E from columns B:K, starting from row 2, transpose so rows = oscillators
-E = df.iloc[0:, 1:11].to_numpy().T
+# Extract data from columns B–K (10 oscillators), transpose to get shape (10, n)
+E = df.iloc[:, 1:11].to_numpy().T
 
-# ===== Plot =====
+# ===== Create plot =====
 fig, ax = plt.subplots(figsize=(10, 6))
 
-# Style combinations
+# Style options
 colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', '#FF7F0E', '#8B0000', '#006400']
 markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', '*', 'h']
-linestyles = ['-', '--', '-.', ':', (0, (5, 5)), (0, (3, 5, 1, 5)),
-              (0, (3, 1, 1, 1)), (0, (5, 10)), (0, (3, 10, 1, 10)), (0, (1, 1))]
+linestyles = [
+    '-', '--', '-.', ':', (0, (5, 5)), (0, (3, 5, 1, 5)),
+    (0, (3, 1, 1, 1)), (0, (5, 10)), (0, (3, 10, 1, 10)), (0, (1, 1))
+]
 
-# Plot each oscillator's data
+# Plot each oscillator
 for i in range(E.shape[0]):
     ax.plot(
         t, E[i],
@@ -43,18 +49,25 @@ for i in range(E.shape[0]):
         markersize=6
     )
 
-# ===== Labels and formatting =====
-ax.set_xlabel("time", fontsize=12)
+# ===== Labels, title, and formatting =====
+ax.set_xlabel("Time", fontsize=12)
 ax.set_ylabel("Sum of squares of pairwise distances", fontsize=12)
 ax.set_title("Synchronization of 10 Lorentz oscillators", fontsize=14, fontweight='bold')
 
-# Add vertical dashed black line at x = 1.5
+# Add vertical dashed black line at x = 1.5 and label it
 ax.axvline(x=1.5, color='black', linestyle='--', linewidth=2)
+plt.text(1.51,1.4, 'Network Connectivity Change', rotation=-90)
 
+# Legend and grid
 ax.legend(fontsize=9, loc='upper right', frameon=False, ncol=2)
 ax.grid(True)
 
-plt.xlim(0,3)
-plt.ylim(0,5.5)
+# Set axis limits
+plt.xlim(0, 3)
+plt.ylim(0, 5.5)
 plt.tight_layout()
+
+# ===== Save and display =====
+plt.savefig(save_path, format='eps')  # Save in EPS format
 plt.show()
+plt.close()  # Close the plot to free up memory
