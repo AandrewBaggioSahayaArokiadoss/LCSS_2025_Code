@@ -9,7 +9,7 @@ import os
 
 # ===== File paths =====
 # Path to input Excel file
-file_path = '/content/drive/My Drive/synchronization_data.xlsx'  
+file_path = '/content/drive/My Drive/synchronization_data.xlsx'
 
 # Path to save the output figure (EPS format)
 save_path = '/content/drive/My Drive/Synchronization_image.eps'
@@ -55,8 +55,10 @@ ax.set_ylabel("Sum of squares of pairwise distances", fontsize=12)
 ax.set_title("Synchronization of 10 Lorentz oscillators", fontsize=14, fontweight='bold')
 
 # Add vertical dashed black line at x = 1.5 and label it
-ax.axvline(x=1.5, color='black', linestyle='--', linewidth=2)
-plt.text(1.51,1.4, 'Network Connectivity Change', rotation=-90)
+ax.axvline(x=1, color='black', linestyle='--', linewidth=2)
+ax.axvline(x=2, color='black', linestyle='--', linewidth=2)
+plt.text(1,1.4, 'Network Connectivity Change', rotation=-90)
+plt.text(2,1.4, 'Network Connectivity Change', rotation=-90)
 
 # Legend and grid
 ax.legend(fontsize=9, loc='upper right', frameon=False, ncol=2)
