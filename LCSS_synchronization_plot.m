@@ -25,24 +25,40 @@ tail2 = [1 2 2 3 3 4 1 4 2 3 4 5 5 6 7 8 8 8 7 9 10 1];
 head2 = [2 1 3 1 4 1 5 5 6 6 7 6 7 8 5 6 7 9 9 10 9 10];
 G2    = digraph(tail2, head2);
 
+% Connectivity for second time interval
+tail3 = [1 2 8 8 8 2 9 7 6 4 4 4 3 10 5];
+head3 = [2 8 1 9 7 6 7 6 4 9 3 5 10 5 3];
+G3    = digraph(tail3, head3);
+
+figure(1)
+plot(G1,'Layout','circle')
+figure(2)
+plot(G2,'Layout','circle')
+figure(3)
+plot(G3,'Layout','circle')
+
 N         = 10;  % Number of oscillators (nodes)
 numStates = 3;   % State dimension of each oscillator
 
 %% Simulation settings
-data_length1 = 25;
-data_length2 = 25;
-t_end1 = 1.5;                  % End of first interval
-t_end2 = 1.5;                  % End of second interval
+data_length1 = 10;
+data_length2 = 10;
+data_length3 = 10;
+t_end1 = 1;                  % End of first interval
+t_end2 = 1;                  % End of second interval
+t_end3 = 1;                  % End of third interval
 tspan1 = linspace(0, t_end1, data_length1);
 tspan2 = linspace(0, t_end2, data_length2);
+tspan3 = linspace(0, t_end3, data_length3);
 
 % Assign coupling strengths
 G1 = SyncCouplingAssign(G1, a);
 G2 = SyncCouplingAssign(G2, a);
+G3 = SyncCouplingAssign(G3, a);
 
 %% Initial conditions
-x_mean = 0; 
-x_std  = 2;
+x_mean = 5; 
+x_std  = 20;
 P      = diag([1, 0, 0]);                    % Projection matrix
 X0     = x_mean + x_std*rand(1, numStates*N);
 
@@ -53,12 +69,19 @@ X0     = x_mean + x_std*rand(1, numStates*N);
 % Use final state from first interval as initial state for second
 X0 = X1(end,:);
 
-% Second interval (graph G2)
+% Third interval (graph G2)
 [X2, t2] = SimulateCoupledSystems(@LorenzOscillator, tspan2, X0, G2, P);
 
+% Use final state from second interval as initial state for third
+X0 = X2(end,:);
+
+% Second interval (graph G3)
+[X3, t3] = SimulateCoupledSystems(@LorenzOscillator, tspan3, X0, G3, P);
+
+
 % Concatenate results from both intervals
-X = [X1(1:end-1,:); X2];
-t = [t1(1:end-1,:); t2 + t1(end)];
+X = [X1;X2(2:end,:);X3(2:end,:)];
+t = [t1;t2(2:end,:)+t1(end);t3(2:end,:)+t2(end)+t3(end)];
 
 %% Visualization settings
 state_indices   = 1:numStates;
