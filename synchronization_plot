@@ -3,7 +3,10 @@ from google.colab import drive
 drive.mount('/content/drive')
 
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 import numpy as np
 import os
 
