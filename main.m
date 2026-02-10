@@ -20,19 +20,16 @@ beta  = 8/3;
 
 % Analytical coupling strength derived (sufficient for synchronization)
 a = -sigma + (beta*(beta+1)*(rho+sigma)^2) / (16*(beta-1));
-% a = 1;  % (alternate manual coupling strength)
 
 %% === Define connectivity digraph ===
-% Define directed edges via tail → head lists
-tail1 = [1 2 3 4 4 5 4 5 6];
-head1 = [2 3 1 1 2 1 5 6 4];
-G = digraph(tail1, head1);
-
-N = G.numnodes;       % Number of oscillators
-numStates = 3;        % Dimension of each oscillator's state
+N = 10;       % Number of oscillators
+density = 0.1;
+G = generateOneRootSCC(N, density);
+num_states = 3;        % Dimension of each oscillator's state
 
 %% === Assign coupling strengths ===
-G = SyncCouplingAssign(G, a);
+G = SyncCouplingAssign(G, 1.1*a);
+
 figure;
 plot(G, 'EdgeLabel', G.Edges.Weight, 'Layout', 'circle');
 title('Coupling digraph with assigned weights');
@@ -41,87 +38,42 @@ title('Coupling digraph with assigned weights');
 P = diag([1, 0, 0]);   % couple only first coordinate (e.g. x-variable)
 
 %% === Simulation settings ===
+
 data_length = 10;
-t_end = 2;
+t_end = 50;
 tspan = linspace(0, t_end, data_length);
 
 %% === Initial conditions ===
 x_mean = 0;
-x_std  = 12;
-X0 = x_mean + x_std * rand(1, numStates * N);
+x_std  = 10^-6;
+X0 = x_mean + x_std * rand(num_states * N,1);
 
 %% === Simulate coupled Lorenz oscillators ===
-[X, t] = SimulateCoupledSystems(@LorenzOscillator, tspan, X0, G, P);
+[X, t] = SimulateCoupledSystems(@LorenzOscillator,tspan, X0, G, P,a);
 
-%% === Compute synchronization errors (pairwise in a ring) ===
-syncError = zeros(N, length(t));
+% INPUT:
+% t             → d×1 vector of time points
+% X             → d×(N*num_states) state data
+% N             → number of oscillators
+% num_states    → number of states per oscillator
 
-figure; hold on; grid on;
-colors = lines(N);
+X = X.';
 
-% Define arrays of marker types and line-styles to cycle through
-markerList    = {'o', '+', '*', 's', 'd', 'v', '^', '>', '<', 'p', 'h'};
-lineStyleList = {'-', '--', ':', '-.'};
+X_pdist = zeros(N,length(t));
 
-for i = 1:N
-    % Determine "next" oscillator index in ring (with wrap-around)
-    next = i + 1;
-    if next > N
-        next = 1;
-    end
+A = adjacency(digraph(1:N-1,2:N));
+L_pair = diag(sum(A,2)) - A;
+L_kron = kron(L_pair,eye(num_states));
 
-    % Indices of state components in X for oscillator i and for next oscillator:
-    idx_i    = (i-1)*numStates + (1:numStates);
-    idx_next = (next-1)*numStates + (1:numStates);
-
-    % Extract state trajectories:
-    Xi    = X(:, idx_i);
-    Xnext = X(:, idx_next);
-
-    % Difference in full state space at each time:
-    D = Xi - Xnext;            % size: [ length(t) × numStates ]
-
-    % Compute Euclidean norm (L2) of difference at each time:
-    e_i = vecnorm(D, 2, 2);    % returns [length(t) × 1] vector  :contentReference[oaicite:0]{index=0}
-
-    syncError(i, :) = e_i;
-
-    % Choose style for this line
-    m  = markerList{ mod(i-1, numel(markerList)) + 1 };
-    ls = lineStyleList{ mod(i-1, numel(lineStyleList)) + 1 };
-    c  = colors(i, :);
-
-    plot(t, e_i, ...
-         'LineStyle', ls, ...
-         'Marker',   m, ...
-         'Color',    c, ...
-         'LineWidth', 2, ...
-         'MarkerSize', 6, ...
-         'DisplayName', sprintf('Osc %d vs %d', i, next) ...
-    );
+% compute pairwise distances and sum for each time step
+for ti = 1:length(t)
+    X_pdist(:,ti) = sqrt(sum(reshape(L_kron*X(:,ti),num_states,N).^2,1)).';
 end
 
+% plot
+figure;
+plot(t,X_pdist, 'LineWidth', 1.5);
 xlabel('Time');
-ylabel('Synchronization error (L2 norm in state space)');
-title(sprintf('Synchronization error: ring-coupled %d Lorenz oscillators', N));
-legend('Location','bestoutside');
-hold off;
-
-%% === Save synchronization error data to Excel ===
-filename = 'synchronization_data.xlsx';
-cols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-range_end = length(t) + 1;
-
-% First column: time vector
-writematrix(t.', filename, 'Sheet', 1, 'Range', strcat(cols(1), '2:', cols(1), string(range_end)));
-writematrix('t', filename, 'Sheet', 1, 'Range', strcat(cols(1), '1'));
-
-for i = 1:N
-    % Write error data for each oscillator-pair
-    col_letter = cols(i+1);
-    range_str = strcat(col_letter, '2:', col_letter, string(range_end));
-    writematrix(syncError(i,:).', filename, 'Sheet', 1, 'Range', range_str);
-    writematrix( sprintf('e_%d', i), filename, 'Sheet', 1, 'Range', strcat(col_letter, '1') );
-end
-
-disp(['Time and synchronization-error data saved to ', filename]);
+ylabel('Sum of All Pairwise Distances');
+title('Total Pairwise Distance vs Time');
+grid on;
