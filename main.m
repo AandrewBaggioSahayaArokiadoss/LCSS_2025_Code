@@ -22,7 +22,7 @@ beta  = 8/3;
 a = -sigma + (beta*(beta+1)*(rho+sigma)^2) / (16*(beta-1));
 
 %% === Define connectivity digraph ===
-N = 10;       % Number of oscillators
+N = 20;       % Number of oscillators
 density = 0.1;
 G = generateOneRootSCC(N, density);
 num_states = 3;        % Dimension of each oscillator's state
@@ -39,7 +39,7 @@ P = diag([1, 0, 0]);   % couple only first coordinate (e.g. x-variable)
 
 %% === Simulation settings ===
 
-data_length = 10;
+data_length = 20;
 t_end = 100;
 tspan = linspace(0, t_end, data_length);
 
