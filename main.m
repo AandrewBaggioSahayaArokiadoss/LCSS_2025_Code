@@ -28,7 +28,7 @@ G = generateOneRootSCC(N, density);
 num_states = 3;        % Dimension of each oscillator's state
 
 %% === Assign coupling strengths ===
-G = SyncCouplingAssign(G, 1.1*a);
+G = SyncCouplingAssign(G, 1.01*a);
 
 figure;
 plot(G, 'EdgeLabel', G.Edges.Weight, 'Layout', 'circle');
@@ -40,7 +40,7 @@ P = diag([1, 0, 0]);   % couple only first coordinate (e.g. x-variable)
 %% === Simulation settings ===
 
 data_length = 10;
-t_end = 50;
+t_end = 100;
 tspan = linspace(0, t_end, data_length);
 
 %% === Initial conditions ===
