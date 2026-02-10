@@ -77,3 +77,11 @@ xlabel('Time');
 ylabel('Sum of All Pairwise Distances');
 title('Total Pairwise Distance vs Time');
 grid on;
+
+filename = 'sync10022026.xlsx';  % you can change the name/path
+
+% Write the matrix to the Excel file:
+writematrix(dataMatrix, filename);
+
+% Optional: display a message
+fprintf('Data saved successfully to %s\n', filename);
