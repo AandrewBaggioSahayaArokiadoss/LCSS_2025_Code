@@ -13,7 +13,7 @@
 %     X – simulated state trajectories (rows: time, cols: state variables)
 %     t – time vector returned by ode45
 
-function [X,t] = SimulateCoupledSystems(systemDynamics,tspan,X0,G,P)   
+function [X,t] = SimulateCoupledSystems(systemDynamics,tspan,X0,G,P,a)   
 
     %% Build weighted Laplacian matrix from graph
     % Weighted adjacency matrix (transpose because digraph adjacency
@@ -24,5 +24,5 @@ function [X,t] = SimulateCoupledSystems(systemDynamics,tspan,X0,G,P)
     L = diag(sum(A,2)) - A;
 
     %% Simulate network dynamics with ode45
-    [t, X] = ode45(@(t,X) CoupledDynamics(t,X,systemDynamics,L,P),tspan,X0);  
+    [t, X] = ode89(@(t,X) CoupledDynamics(t,X,systemDynamics,L,P,a),tspan,X0);  
 end
