@@ -84,7 +84,7 @@ function run_simulation()
         end
 
         D = Diagonal(vec(sum(A, dims=2)))
-        L = D - A
+        L = D - transpose(A)
 
         stateDim = size(P,1)
         params = (systemDynamics!, L, P, a, n, stateDim)
