@@ -1,6 +1,11 @@
-###############################################################
-#  FORCE EXTERNAL WINDOWS (IMPORTANT)
-###############################################################
+using Plots
+
+# Close all open GR windows
+try
+    Plots.closeall()
+catch
+end
+
 ENV["GKSwstype"] = "gksqt"
 
 using Plots
@@ -141,7 +146,7 @@ println("✓ All functions ready")
 # ===================== MAIN EXECUTION =======================
 ###############################################################
 
-N = 50
+N = 100
 
 σ, ρ, β = 10.0, 25.0, 8/3
 a = -σ + (β*(β+1)*(ρ+σ)^2)/(16*(β-1))
@@ -176,17 +181,17 @@ for e in edges(G)
 end
 
 display(p1)  # Separate window 1
-savefig(p1, joinpath(output_dir,"network.pdf"))
+savefig(p1, joinpath(output_dir,"network.svg"))
 
-println("📊 Saved: network.pdf")
+println("📊 Saved: network.svg")
 
 ###############################################################
-# FIGURE 2 — Synchronization Error
+# FIGURE 2 — Pairwise Distances Between Consecutive Nodes
 ###############################################################
 
 P = Diagonal([1.0,0.0,0.0])
-tspan = range(0,100,length=50)
-X0 = 1e-4 .* randn(3N)
+tspan = range(0,100,length=10)
+X0 = 1e-6 .* randn(3N)
 
 println("⏱️ Simulating...")
 
@@ -199,19 +204,47 @@ X,t = SimulateCoupledSystems(
     a
 )
 
-sync_error = [var(X[i,1:3:3N]) for i in 1:size(X,1)]
+println("📏 Computing pairwise distances...")
 
-p2 = plot(t,sync_error,
-          lw=3,
-          c=:red,
-          yscale=:log10,
-          xlabel="Time",
-          ylabel="Var(x)",
+num_time = size(X,1)
+pairwise_distances = zeros(num_time, N-1)
+
+for k in 1:num_time
+    U = reshape(X[k,:], 3, N)  # reshape row into (stateDim × N)
+    
+    for i in 1:N-1
+        pairwise_distances[k,i] = norm(U[:,i] - U[:,i+1])
+    end
+end
+
+###############################################################
+# Plot all pairwise distances on same graph (no legend)
+###############################################################
+
+p2 = plot(size=(900,500),
+          grid=true,
           legend=false,
-          size=(900,400))
+          xlabel="Time",
+          ylabel="Pairwise Distances",
+          title="Total Pairwise Distance vs Time")
 
-display(p2)  # Separate window 2
-savefig(p2, joinpath(output_dir,"sync.pdf"))
+for i in 1:N-1
+    plot!(p2, t, pairwise_distances[:,i], lw=1.5)
+end
 
-println("📈 Saved: sync.pdf")
+display(p2)
+savefig(p2, joinpath(output_dir,"pairwise_distances.svg"))
+
+println("📈 Saved: pairwise_distances.svg")
+
+###############################################################
+# Compute average of final-time pairwise distances
+###############################################################
+
+final_distances = pairwise_distances[end, :]
+avg_final_distance = mean(final_distances)
+
+println("📊 Average final pairwise distance = ",
+        round(avg_final_distance, digits=6))
+
 println("✅ COMPLETE")
