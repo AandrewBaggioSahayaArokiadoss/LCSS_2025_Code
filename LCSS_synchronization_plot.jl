@@ -255,7 +255,7 @@ function run_simulation()
     ###############################################################
 
     CSV.write(joinpath(output_dir,"adjacency_matrix.csv"),
-              DataFrame(A, :auto))
+              DataFrame(transpose(A), :auto))
     println("📂 Saved adjacency_matrix.csv")
 
     ###############################################################
