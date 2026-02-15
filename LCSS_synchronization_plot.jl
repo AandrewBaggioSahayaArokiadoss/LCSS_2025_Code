@@ -1,12 +1,13 @@
-using Plots
+###############################################################
+# CLEAN START
+###############################################################
 
-# Close all open GR windows
 try
-    Plots.closeall()
+    closeall()
 catch
 end
 
-ENV["GKSwstype"] = "gksqt"
+ENV["GKSwstype"] = "100"
 
 using Plots
 using Graphs
@@ -146,7 +147,7 @@ println("✓ All functions ready")
 # ===================== MAIN EXECUTION =======================
 ###############################################################
 
-N = 100
+N = 50
 
 σ, ρ, β = 10.0, 25.0, 8/3
 a = -σ + (β*(β+1)*(ρ+σ)^2)/(16*(β-1))
@@ -154,7 +155,7 @@ a = -σ + (β*(β+1)*(ρ+σ)^2)/(16*(β-1))
 println("🔧 Coupling a = ", round(a,digits=4))
 
 G = generateOneRootSCC(N)
-G = SyncCouplingAssign(G, 1.01a)
+G = SyncCouplingAssign(G, 1.1a)
 
 ###############################################################
 # FIGURE 1 — Directed Graph with Arrows
@@ -165,8 +166,8 @@ x = cos.(θ)
 y = sin.(θ)
 
 p1 = scatter(x,y,
-             markersize=6,
-             markercolor=:lightblue,
+             markersize=5,
+             markercolor=:red,
              legend=false,
              axis=false,
              size=(600,600))
@@ -186,65 +187,57 @@ savefig(p1, joinpath(output_dir,"network.svg"))
 println("📊 Saved: network.svg")
 
 ###############################################################
-# FIGURE 2 — Pairwise Distances Between Consecutive Nodes
+# FIGURE 2 — Pairwise Distances (Improved Layout)
 ###############################################################
 
-P = Diagonal([1.0,0.0,0.0])
-tspan = range(0,100,length=10)
-X0 = 1e-6 .* randn(3N)
+# Compute axis limits
+xmax = maximum(t)
+ymax = maximum(pairwise_distances)
 
-println("⏱️ Simulating...")
+# Add 8% headroom
+y_padding = 0.08 * ymax
+y_upper = ymax + y_padding
 
-X,t = SimulateCoupledSystems(
-    LorenzOscillator!,
-    collect(tspan),
-    X0,
-    G,
-    P,
-    a
+
+p2 = plot(
+    size=(1000,600),
+    grid=true,
+    legend=false,
+    xlabel="Time",
+    ylabel="Pairwise Distances",
+    title="Total Pairwise Distance vs Time",
+    xlims=(0, xmax),
+    ylims=(0, y_upper),
+
+    left_margin=10Plots.mm,
+    right_margin=10Plots.mm,
+    bottom_margin=12Plots.mm,
+    top_margin=12Plots.mm,
+
+    guidefontsize=16,
+    tickfontsize=13,
+    titlefontsize=18
 )
 
-println("📏 Computing pairwise distances...")
-
-num_time = size(X,1)
-pairwise_distances = zeros(num_time, N-1)
-
-for k in 1:num_time
-    U = reshape(X[k,:], 3, N)  # reshape row into (stateDim × N)
-    
-    for i in 1:N-1
-        pairwise_distances[k,i] = norm(U[:,i] - U[:,i+1])
-    end
-end
-
-###############################################################
-# Plot all pairwise distances on same graph (no legend)
-###############################################################
-
-p2 = plot(size=(900,500),
-          grid=true,
-          legend=false,
-          xlabel="Time",
-          ylabel="Pairwise Distances",
-          title="Total Pairwise Distance vs Time")
-
+# Plot all curves
 for i in 1:N-1
     plot!(p2, t, pairwise_distances[:,i], lw=1.5)
 end
+
+# Add thin black markers at t = 0
+initial_values = pairwise_distances[1, :]
+
+scatter!(
+    p2,
+    zeros(N-1),
+    initial_values,
+    color=:black,
+    markersize=4,          # smaller marker
+    markerstrokecolor=:black,
+    markerstrokewidth=0.5  # thin outline
+)
 
 display(p2)
 savefig(p2, joinpath(output_dir,"pairwise_distances.svg"))
 
 println("📈 Saved: pairwise_distances.svg")
-
-###############################################################
-# Compute average of final-time pairwise distances
-###############################################################
-
-final_distances = pairwise_distances[end, :]
-avg_final_distance = mean(final_distances)
-
-println("📊 Average final pairwise distance = ",
-        round(avg_final_distance, digits=6))
-
-println("✅ COMPLETE")
