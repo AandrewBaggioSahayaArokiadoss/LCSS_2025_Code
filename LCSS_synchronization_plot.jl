@@ -104,29 +104,41 @@ function run_simulation()
     ###############################################################
     # 4️⃣ Generate Directed Graph with ONE Root SCC
     ###############################################################
-    function generateOneRootSCC(n::Int)
-
-        G = MetaDiGraph(n)
-
-        k = max(2, floor(Int, n÷4))
-        root = collect(1:k)
-
-        for i in 1:k
-            add_edge!(G, root[i], root[mod1(i+1,k)])
+    function generateOneRootSCC(n::Int; p=nothing)
+        # --- Choose probability if not provided ---
+        if p === nothing
+            p = 0.2 + 0.6 * rand()   # uniform in (0.4, 1)
         end
+        g = DiGraph(n)
 
-        for i in root, j in root
-            if i != j && rand() < 0.3
-                add_edge!(G, i, j)
+        # --- Step 1: Choose size of root SCC ---
+        k = rand(1:n)
+
+        root_vertices = 1:k
+        other_vertices = k+1:n
+        
+        # --- Step 2: Create strongly connected root SCC (cycle) ---
+        if k > 1
+            for i in 1:k
+                add_edge!(g, i, mod1(i+1, k))
             end
         end
 
-        for v in k+1:n
-            parent = rand(root)
-            add_edge!(G, parent, v)
+        # --- Step 3: Random digraph on remaining vertices ---
+        for i in other_vertices
+            for j in other_vertices
+                if i != j && rand() < p
+                    add_edge!(g, i, j)
+                end
+            end
         end
+        
+        # --- Step 4: Force edges from root SCC → others ---
 
-        return G
+        for v in other_vertices
+            add_edge!(g, rand(root_vertices), v)
+        end
+        return g
     end
 
     ###############################################################
@@ -150,8 +162,9 @@ function run_simulation()
 
     println("🔧 Coupling a = ", round(a,digits=4))
 
-    G = generateOneRootSCC(N)
-    G = SyncCouplingAssign(G, 1.01a)
+   G_simple = generateOneRootSCC(N)
+   G = MetaDiGraph(G_simple)   # ← convert to MetaGraph
+   G = SyncCouplingAssign(G, 1.01*a)
 
     ###############################################################
     # FIGURE 1 — Network Plot
@@ -185,7 +198,7 @@ function run_simulation()
     ###############################################################
 
     P = Diagonal([1.0,0.0,0.0])
-    tspan = range(0,100,length=200)
+    tspan = range(0,10,length=200)
     X0 = 1e-4 .* randn(3N)
 
     println("⏱️ Simulating...")
@@ -255,7 +268,7 @@ function run_simulation()
     ###############################################################
 
     CSV.write(joinpath(output_dir,"adjacency_matrix.csv"),
-              DataFrame(transpose(A), :auto))
+              DataFrame(A, :auto))
     println("📂 Saved adjacency_matrix.csv")
 
     ###############################################################
